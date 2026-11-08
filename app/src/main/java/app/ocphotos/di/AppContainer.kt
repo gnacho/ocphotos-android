@@ -51,5 +51,9 @@ class AppContainer(context: Context) {
         },
         httpClient = httpClient,
         onCredentialsChange = { credentials = it },
+        onLogout = {
+            imageLoader.memoryCache?.clear()
+            imageLoader.diskCache?.clear()
+        },
     )
 }

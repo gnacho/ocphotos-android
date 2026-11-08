@@ -12,6 +12,8 @@ class SyncWorker(
 ) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val app = applicationContext as PhotosApplication
+        // No session bound yet: nothing to sync, avoid a retry loop.
+        if (!app.container.repository.isBound) return Result.success()
         return try {
             app.container.repository.sync()
             Result.success()
