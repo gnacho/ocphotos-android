@@ -48,7 +48,7 @@ class LoginViewModel(private val repository: PhotosRepository) : ViewModel() {
                 throw e
             } catch (e: Exception) {
                 repository.bind(null)
-                _state.update { it.copy(loading = false, error = e.message ?: "Login failed") }
+                _state.update { it.copy(loading = false, error = app.ocphotos.util.friendlyMessage(e)) }
             }
         }
     }

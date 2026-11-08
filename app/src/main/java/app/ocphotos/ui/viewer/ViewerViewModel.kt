@@ -84,7 +84,7 @@ class ViewerViewModel(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            _error.value = e.message
+            _error.value = app.ocphotos.util.friendlyMessage(e)
             null
         }
     }

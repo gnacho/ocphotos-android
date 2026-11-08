@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -18,6 +19,10 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +30,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -43,6 +49,7 @@ fun TimelineScreen(
     onOpen: (Long) -> Unit,
     onToggleFavorite: (AssetEntity) -> Unit,
     onSync: () -> Unit,
+    onRescan: () -> Unit,
 ) {
     val grouped = remember(assets) { groupByDay(assets) }
 
@@ -55,7 +62,14 @@ fun TimelineScreen(
         return
     }
     if (assets.isEmpty()) {
-        StatusBox(loading = false, error = null, empty = true, emptyLabel = "No photos yet")
+        StatusBox(
+            loading = false,
+            error = null,
+            empty = true,
+            emptyLabel = "No photos yet",
+            actionLabel = "Rescan",
+            onAction = onRescan,
+        )
         return
     }
 
@@ -105,18 +119,18 @@ fun TimelineScreen(
                     ) {
                         AssetThumb(asset = asset, modifier = Modifier.fillMaxSize())
                         if (asset.favorite) {
-                            Text(
-                                text = "\u2665",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.titleSmall,
+                            Icon(
+                                Icons.Filled.Favorite,
+                                contentDescription = "Favorite",
+                                tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.align(Alignment.TopEnd).padding(2.dp),
                             )
                         }
                         if (asset.mediaType == "video") {
-                            Text(
-                                text = "\u25B6",
-                                color = androidx.compose.ui.graphics.Color.White,
-                                style = MaterialTheme.typography.labelMedium,
+                            Icon(
+                                Icons.Filled.PlayArrow,
+                                contentDescription = "Video",
+                                tint = Color.White,
                                 modifier = Modifier.align(Alignment.BottomEnd).padding(2.dp),
                             )
                         }
@@ -134,18 +148,22 @@ fun TimelineScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             yearItemIndex.keys.forEach { year ->
-                Text(
-                    text = year.toString(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
+                Box(
+                    contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .height(48.dp)
                         .clickable {
                             scope.launch { gridState.scrollToItem(yearItemIndex[year] ?: 0) }
-                        }
-                        .padding(vertical = 10.dp),
-                )
+                        },
+                ) {
+                    Text(
+                        text = year.toString(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
         }
     }

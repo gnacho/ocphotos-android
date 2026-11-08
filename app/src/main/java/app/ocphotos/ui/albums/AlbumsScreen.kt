@@ -43,6 +43,7 @@ fun AlbumsScreen(
 ) {
     var showCreate by remember { mutableStateOf(false) }
     var renameTarget by remember { mutableStateOf<AlbumEntity?>(null) }
+    var deleteTarget by remember { mutableStateOf<AlbumEntity?>(null) }
 
     Scaffold(
         floatingActionButton = {
@@ -73,7 +74,7 @@ fun AlbumsScreen(
                             IconButton(onClick = { renameTarget = album }) {
                                 Icon(Icons.Filled.Edit, contentDescription = "Rename")
                             }
-                            IconButton(onClick = { onDelete(album.id) }) {
+                            IconButton(onClick = { deleteTarget = album }) {
                                 Icon(Icons.Filled.Delete, contentDescription = "Delete")
                             }
                         }
@@ -98,6 +99,22 @@ fun AlbumsScreen(
             initial = album.name,
             onConfirm = { onRename(album.id, it) },
             onDismiss = { renameTarget = null },
+        )
+    }
+    deleteTarget?.let { album ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text("Delete album") },
+            text = { Text("\"${album.name}\" will be removed. Photos are not deleted.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    onDelete(album.id)
+                    deleteTarget = null
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                TextButton(onClick = { deleteTarget = null }) { Text("Cancel") }
+            },
         )
     }
 }

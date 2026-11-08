@@ -38,7 +38,7 @@ class TimelineViewModel(private val repository: PhotosRepository) : ViewModel() 
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _syncError.value = e.message ?: "Sync failed"
+                _syncError.value = app.ocphotos.util.friendlyMessage(e)
             } finally {
                 _syncing.value = false
             }
