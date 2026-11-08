@@ -1,0 +1,59 @@
+package app.ocphotos.ui.tags
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import app.ocphotos.data.remote.dto.TagDto
+import app.ocphotos.ui.components.StatusBox
+
+@Composable
+fun TagsScreen(
+    tags: List<TagDto>,
+    loading: Boolean,
+    error: String?,
+    onOpen: (String) -> Unit,
+) {
+    if (loading && tags.isEmpty()) {
+        StatusBox(loading = true, error = null, empty = false, emptyLabel = "")
+        return
+    }
+    if (tags.isEmpty()) {
+        StatusBox(
+            loading = false,
+            error = error,
+            empty = error == null,
+            emptyLabel = "No tags",
+        )
+        return
+    }
+    LazyColumn(Modifier.fillMaxSize()) {
+        items(tags, key = { it.name }) { tag ->
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpen(tag.name) }
+                    .padding(16.dp),
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(tag.name, style = MaterialTheme.typography.titleMedium)
+                }
+                Text("${tag.count}", style = MaterialTheme.typography.bodyMedium)
+            }
+            HorizontalDivider()
+        }
+    }
+}
