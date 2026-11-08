@@ -42,6 +42,12 @@ object TimeFormat {
         )
     }
 
+    fun year(epochSeconds: Long): Int {
+        val cal = java.util.Calendar.getInstance()
+        cal.timeInMillis = epochSeconds * 1000
+        return cal.get(java.util.Calendar.YEAR)
+    }
+
     fun durationLabel(ms: Long): String = when {
         ms < 1000 -> "${ms}ms"
         ms < 60000 -> "${TimeUnit.MILLISECONDS.toSeconds(ms)}s"
