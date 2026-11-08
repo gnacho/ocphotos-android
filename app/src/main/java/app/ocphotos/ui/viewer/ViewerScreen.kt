@@ -2,6 +2,10 @@ package app.ocphotos.ui.viewer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -46,7 +50,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -77,6 +84,8 @@ fun ViewerScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    var scale by remember { mutableStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
 
     if (assets.isEmpty()) {
         Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
@@ -94,6 +103,8 @@ fun ViewerScreen(
     var showInfo by remember { mutableStateOf(false) }
 
     LaunchedEffect(pagerState.currentPage) {
+        scale = 1f
+        offset = Offset.Zero
         viewModel.loadTags(assets[pagerState.currentPage])
     }
 
@@ -106,7 +117,32 @@ fun ViewerScreen(
                 AsyncImage(
                     model = repo.originalUrl(asset.id),
                     contentDescription = asset.filename,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer(
+                            scaleX = scale,
+                            scaleY = scale,
+                            translationX = offset.x,
+                            translationY = offset.y,
+                        )
+                        .pointerInput(Unit) {
+                            // Pinch-to-zoom only on two fingers; one finger stays for
+                            // the pager's swipe so zoom never blocks navigation.
+                            awaitEachGesture {
+                                awaitFirstDown(requireUnconsumed = false)
+                                do {
+                                    val event = awaitPointerEvent()
+                                    val pressed = event.changes.count { it.pressed }
+                                    if (pressed >= 2) {
+                                        val zoom = event.calculateZoom()
+                                        val pan = event.calculatePan()
+                                        scale = (scale * zoom).coerceIn(1f, 5f)
+                                        offset = if (scale > 1f) offset + pan else Offset.Zero
+                                        event.changes.forEach { it.consume() }
+                                    }
+                                } while (event.changes.any { it.pressed })
+                            }
+                        },
                     contentScale = ContentScale.Fit,
                 )
             }

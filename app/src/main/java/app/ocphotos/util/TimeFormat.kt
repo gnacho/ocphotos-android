@@ -48,6 +48,19 @@ object TimeFormat {
         return cal.get(java.util.Calendar.YEAR)
     }
 
+    fun month(epochSeconds: Long): Int {
+        val cal = java.util.Calendar.getInstance()
+        cal.timeInMillis = epochSeconds * 1000
+        return cal.get(java.util.Calendar.MONTH) + 1
+    }
+
+    private val monthNames = arrayOf(
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    )
+
+    fun monthShortName(month: Int): String = monthNames.getOrElse(month - 1) { "" }
+
     fun durationLabel(ms: Long): String = when {
         ms < 1000 -> "${ms}ms"
         ms < 60000 -> "${TimeUnit.MILLISECONDS.toSeconds(ms)}s"
