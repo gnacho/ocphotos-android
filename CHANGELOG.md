@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.8 (2026-11-08)
+
+- Fix dark mode: text was light-on-white on screens without a background
+  surface (login). The theme now paints its own background.
+
 ## 0.1.6 (2026-11-08)
 
 - Swipe between photos in the viewer.
