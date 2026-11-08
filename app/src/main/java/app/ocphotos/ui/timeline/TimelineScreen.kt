@@ -26,8 +26,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -40,6 +43,9 @@ import app.ocphotos.ui.components.StatusBox
 import app.ocphotos.util.TimeFormat
 import app.ocphotos.util.groupByDay
 import kotlinx.coroutines.launch
+
+private data class MonthRef(val month: Int, val itemIndex: Int)
+private data class YearRef(val year: Int, val itemIndex: Int, val months: MutableList<MonthRef>)
 
 @Composable
 fun TimelineScreen(
@@ -76,18 +82,27 @@ fun TimelineScreen(
     val gridState = rememberLazyGridState()
     val scope = rememberCoroutineScope()
 
-    // Map year -> grid item index of the first day header of that year. Item indices
-    // count the day headers too (one header per day plus its assets).
-    val yearItemIndex = remember(assets) {
-        val map = LinkedHashMap<Int, Int>()
+    // Year -> month tree with the grid item index of the first day header of each.
+    val scrubberYears = remember(assets) {
+        val years = LinkedHashMap<Int, YearRef>()
+        val monthSeen = mutableSetOf<String>()
         var itemIndex = 0
         for ((_, list) in grouped) {
-            val year = TimeFormat.year(list.first().takenAt)
-            if (year !in map) map[year] = itemIndex
+            val first = list.first()
+            val year = TimeFormat.year(first.takenAt)
+            val month = TimeFormat.month(first.takenAt)
+            val ref = years.getOrPut(year) { YearRef(year, itemIndex, mutableListOf()) }
+            val key = "$year-$month"
+            if (key !in monthSeen) {
+                monthSeen += key
+                ref.months += MonthRef(month, itemIndex)
+            }
             itemIndex += 1 + list.size
         }
-        map
+        years.values.toList()
     }
+
+    var expandedYear by remember { mutableStateOf<Int?>(null) }
 
     Row(Modifier.fillMaxSize()) {
         LazyVerticalGrid(
@@ -139,30 +154,52 @@ fun TimelineScreen(
             }
         }
 
-        // Rewind scrubber: one entry per year, jump to the first day of that year.
+        // Rewind scrubber: years expand to months; both jump the grid to the first
+        // day header of that year/month.
         Column(
             modifier = Modifier
-                .width(52.dp)
+                .width(56.dp)
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            yearItemIndex.keys.forEach { year ->
+            scrubberYears.forEach { yearRef ->
                 Box(
                     contentAlignment = Alignment.Center,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
                         .clickable {
-                            scope.launch { gridState.scrollToItem(yearItemIndex[year] ?: 0) }
+                            scope.launch { gridState.scrollToItem(yearRef.itemIndex) }
+                            expandedYear = if (expandedYear == yearRef.year) null else yearRef.year
                         },
                 ) {
                     Text(
-                        text = year.toString(),
+                        text = yearRef.year.toString(),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = TextAlign.Center,
                     )
+                }
+                if (expandedYear == yearRef.year) {
+                    yearRef.months.forEach { monthRef ->
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(40.dp)
+                                .clickable {
+                                    scope.launch { gridState.scrollToItem(monthRef.itemIndex) }
+                                },
+                        ) {
+                            Text(
+                                text = TimeFormat.monthShortName(monthRef.month),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                textAlign = TextAlign.Center,
+                            )
+                        }
+                    }
                 }
             }
         }
