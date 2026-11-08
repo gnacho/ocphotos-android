@@ -1,7 +1,5 @@
 package app.ocphotos.ui.viewer
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,7 +22,6 @@ import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.PhotoAlbum
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Sell
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
@@ -36,6 +33,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +47,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.media3.common.MediaItem
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import app.ocphotos.ui.components.LocalRepository
 import app.ocphotos.util.ByteFormat
 import app.ocphotos.util.TimeFormat
@@ -85,27 +88,7 @@ fun ViewerScreen(
     Box(Modifier.fillMaxSize().background(Color.Black)) {
         // Photo / video
         if (a.mediaType == "video") {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                AsyncImage(
-                    model = repo.thumbUrl(a.id, 2048),
-                    contentDescription = a.filename,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Fit,
-                )
-                IconButton(
-                    onClick = {
-                        scope.launch {
-                            val url = viewModel.videoUrl()
-                            if (url != null) {
-                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
-                            }
-                        }
-                    },
-                    modifier = Modifier.align(Alignment.Center),
-                ) {
-                    Icon(Icons.Filled.PlayArrow, contentDescription = "Play", tint = Color.White)
-                }
-            }
+            VideoPlayer(viewModel = viewModel, assetId = a.id)
         } else {
             AsyncImage(
                 model = repo.originalUrl(a.id),
@@ -322,4 +305,31 @@ private fun InfoRow(label: String, value: String) {
         Spacer(Modifier.width(8.dp))
         Text(value, Modifier.weight(1f))
     }
+}
+
+// In-app video playback: ExoPlayer (Media3) fed with the signed stream URL.
+@Composable
+private fun VideoPlayer(viewModel: ViewerViewModel, assetId: Long) {
+    val context = LocalContext.current
+    val player = remember { ExoPlayer.Builder(context).build() }
+
+    LaunchedEffect(assetId) {
+        val url = viewModel.videoUrl()
+        if (url != null) {
+            player.setMediaItem(MediaItem.fromUri(url))
+            player.prepare()
+            player.playWhenReady = true
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose { player.release() }
+    }
+
+    AndroidView(
+        factory = { ctx ->
+            PlayerView(ctx).apply { this.player = player }
+        },
+        modifier = Modifier.fillMaxSize(),
+    )
 }
