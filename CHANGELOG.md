@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.4 (2026-11-08)
+
+- In-app video playback with Media3 (signed stream URL).
+- Year Rewind scrubber on the timeline.
+- Encrypted app-password storage (EncryptedSharedPreferences).
+- Clear image cache on logout (no cross-account images).
+- Serialize sync with a Mutex (no overlapping runs).
+- GitHub Actions CI (build + unit tests).
+- Harden date formatting (runtime locale) and skip sync work when signed out.
+
 ## 0.1.2 (2026-11-08)
 
 - Initial release of the native ocphotos Android client.
