@@ -35,11 +35,14 @@ class PhotosRepository(
     private val apiFactory: (Session) -> PhotosApi,
     private val httpClient: OkHttpClient,
     private val onCredentialsChange: (Credentials?) -> Unit,
+    private val onLogout: () -> Unit = {},
 ) {
     val session: Flow<Session?> = sessionStore.session
 
     @Volatile private var api: PhotosApi? = null
     @Volatile private var serverOrigin: String? = null
+
+    val isBound: Boolean get() = api != null
 
     // Bind the current session to a Retrofit client + image credentials. Called on
     // login, logout and app start (collected from the session flow).
@@ -65,6 +68,7 @@ class PhotosRepository(
         bind(null)
         assetDao.clear()
         albumDao.clear()
+        onLogout()
     }
 
     private fun requireApi(): PhotosApi =

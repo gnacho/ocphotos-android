@@ -18,15 +18,17 @@ class ViewerViewModel(
     private val assetId: Long,
 ) : ViewModel() {
 
-    val asset: StateFlow<AssetEntity?> = MutableStateFlow(null)
-    val tags: StateFlow<List<String>> = MutableStateFlow(emptyList())
-    val albums: StateFlow<List<AlbumEntity>> = MutableStateFlow(emptyList())
-    val error: StateFlow<String?> = MutableStateFlow(null)
+    private val _asset = MutableStateFlow<AssetEntity?>(null)
+    val asset: StateFlow<AssetEntity?> = _asset.asStateFlow()
 
-    private val _asset = asset as MutableStateFlow
-    private val _tags = tags as MutableStateFlow
-    private val _albums = albums as MutableStateFlow
-    private val _error = error as MutableStateFlow
+    private val _tags = MutableStateFlow<List<String>>(emptyList())
+    val tags: StateFlow<List<String>> = _tags.asStateFlow()
+
+    private val _albums = MutableStateFlow<List<AlbumEntity>>(emptyList())
+    val albums: StateFlow<List<AlbumEntity>> = _albums.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
         viewModelScope.launch {

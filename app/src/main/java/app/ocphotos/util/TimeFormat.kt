@@ -7,10 +7,6 @@ import java.util.concurrent.TimeUnit
 
 // Date/time formatting. All backend timestamps are Unix SECONDS.
 object TimeFormat {
-    private val dayFmt = SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault())
-    private val monthFmt = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
-    private val shortFmt = SimpleDateFormat("d MMM yyyy", Locale.getDefault())
-
     fun formatRelativeTime(epochSeconds: Long): String {
         val diff = System.currentTimeMillis() / 1000 - epochSeconds
         val minutes = diff / 60
@@ -26,11 +22,14 @@ object TimeFormat {
         }
     }
 
-    fun formatFullDate(epochSeconds: Long): String = dayFmt.format(Date(epochSeconds * 1000))
+    fun formatFullDate(epochSeconds: Long): String =
+        SimpleDateFormat("EEEE, d MMMM yyyy", Locale.getDefault()).format(Date(epochSeconds * 1000))
 
-    fun formatShortDate(epochSeconds: Long): String = shortFmt.format(Date(epochSeconds * 1000))
+    fun formatShortDate(epochSeconds: Long): String =
+        SimpleDateFormat("d MMM yyyy", Locale.getDefault()).format(Date(epochSeconds * 1000))
 
-    fun formatMonth(epochSeconds: Long): String = monthFmt.format(Date(epochSeconds * 1000))
+    fun formatMonth(epochSeconds: Long): String =
+        SimpleDateFormat("MMMM yyyy", Locale.getDefault()).format(Date(epochSeconds * 1000))
 
     // Day bucket label for the timeline (keyed by local date).
     fun dayKey(epochSeconds: Long): String {
