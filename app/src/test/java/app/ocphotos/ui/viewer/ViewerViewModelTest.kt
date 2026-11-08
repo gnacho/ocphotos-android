@@ -20,7 +20,7 @@ import org.junit.Test
 class ViewerViewModelTest {
 
     @Test
-    fun `toggle favorite updates state and calls api`() = runTest {
+    fun `toggle favorite calls api`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val dao = FakeAssetDao()
         dao.items[1] = assetDto(1, 100).toEntity()
@@ -29,13 +29,15 @@ class ViewerViewModelTest {
         val vm = ViewerViewModel(buildRepository(api, dao), 1)
 
         advanceUntilIdle()
-        assertEquals(false, vm.asset.value?.favorite)
+        val asset = vm.assets.value.first { it.id == 1L }
+
+        vm.loadTags(asset)
+        advanceUntilIdle()
         assertEquals(listOf("pets"), vm.tags.value)
 
-        vm.toggleFavorite()
+        vm.toggleFavorite(asset)
         advanceUntilIdle()
 
-        assertEquals(true, vm.asset.value?.favorite)
         assertEquals(listOf(1L to true), api.favoriteCalls)
         Dispatchers.resetMain()
     }
@@ -49,7 +51,9 @@ class ViewerViewModelTest {
         val vm = ViewerViewModel(buildRepository(api, dao), 1)
 
         advanceUntilIdle()
-        vm.addTag(" beach ")
+        val asset = vm.assets.value.first()
+
+        vm.addTag(asset, " beach ")
         advanceUntilIdle()
 
         assertEquals(listOf("beach"), vm.tags.value)
@@ -67,7 +71,11 @@ class ViewerViewModelTest {
         val vm = ViewerViewModel(buildRepository(api, dao), 1)
 
         advanceUntilIdle()
-        vm.removeTag("pets")
+        val asset = vm.assets.value.first()
+
+        vm.loadTags(asset)
+        advanceUntilIdle()
+        vm.removeTag(asset, "pets")
         advanceUntilIdle()
 
         assertEquals(listOf("beach"), vm.tags.value)

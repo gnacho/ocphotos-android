@@ -2,7 +2,6 @@ package app.ocphotos.ui.viewer
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -32,7 +33,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,16 +47,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import app.ocphotos.data.local.AlbumEntity
+import app.ocphotos.data.local.AssetEntity
 import app.ocphotos.ui.components.LocalRepository
 import app.ocphotos.util.ByteFormat
 import app.ocphotos.util.TimeFormat
@@ -71,58 +70,46 @@ fun ViewerScreen(
     viewModel: ViewerViewModel,
     onClose: () -> Unit,
 ) {
-    val asset by viewModel.asset.collectAsState()
-    val tags by viewModel.tags.collectAsState()
+    val assets by viewModel.assets.collectAsState()
     val albums by viewModel.albums.collectAsState()
+    val tags by viewModel.tags.collectAsState()
     val repo = LocalRepository.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
-    var scale by remember { mutableStateOf(1f) }
-    var offset by remember { mutableStateOf(Offset.Zero) }
 
-    LaunchedEffect(asset?.id) {
-        scale = 1f
-        offset = Offset.Zero
+    if (assets.isEmpty()) {
+        Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
+            Text("Photo not found", color = Color.White)
+        }
+        return
     }
+
+    val startIndex = assets.indexOfFirst { it.id == viewModel.assetId }.coerceAtLeast(0)
+    val pagerState = rememberPagerState(initialPage = startIndex, pageCount = { assets.size })
+    val currentAsset = assets[pagerState.currentPage]
 
     var showTags by remember { mutableStateOf(false) }
     var showAlbums by remember { mutableStateOf(false) }
     var showInfo by remember { mutableStateOf(false) }
 
-    if (asset == null) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Photo not found")
-        }
-        return
+    LaunchedEffect(pagerState.currentPage) {
+        viewModel.loadTags(assets[pagerState.currentPage])
     }
 
-    val a = asset!!
-
     Box(Modifier.fillMaxSize().background(Color.Black)) {
-        // Photo / video
-        if (a.mediaType == "video") {
-            VideoPlayer(viewModel = viewModel, assetId = a.id)
-        } else {
-            AsyncImage(
-                model = repo.originalUrl(a.id),
-                contentDescription = a.filename,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        translationX = offset.x,
-                        translationY = offset.y,
-                    )
-                    .pointerInput(Unit) {
-                        detectTransformGestures { _, pan, zoom, _ ->
-                            scale = (scale * zoom).coerceIn(1f, 5f)
-                            offset = if (scale > 1f) offset + pan else Offset.Zero
-                        }
-                    },
-                contentScale = ContentScale.Fit,
-            )
+        HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+            val asset = assets[page]
+            if (asset.mediaType == "video") {
+                VideoPlayer(viewModel = viewModel, asset = asset)
+            } else {
+                AsyncImage(
+                    model = repo.originalUrl(asset.id),
+                    contentDescription = asset.filename,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Fit,
+                )
+            }
         }
 
         // Top bar
@@ -137,7 +124,7 @@ fun ViewerScreen(
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Close", tint = Color.White)
             }
             Text(
-                text = a.filename,
+                text = currentAsset.filename,
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
                 maxLines = 1,
@@ -153,14 +140,14 @@ fun ViewerScreen(
                 .padding(4.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            IconButton(onClick = viewModel::toggleFavorite) {
+            IconButton(onClick = { viewModel.toggleFavorite(currentAsset) }) {
                 Icon(
-                    if (a.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                    if (currentAsset.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                     contentDescription = "Favorite",
-                    tint = if (a.favorite) Color(0xFFFF4081) else Color.White,
+                    tint = if (currentAsset.favorite) Color(0xFFFF4081) else Color.White,
                 )
             }
-            IconButton(onClick = viewModel::toggleArchived) {
+            IconButton(onClick = { viewModel.toggleArchived(currentAsset) }) {
                 Icon(Icons.Filled.Archive, contentDescription = "Archive", tint = Color.White)
             }
             IconButton(onClick = { showTags = true }) {
@@ -175,7 +162,7 @@ fun ViewerScreen(
                         runCatching {
                             val dir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_PICTURES)
                                 ?: context.cacheDir
-                            repo.downloadOriginal(a.id, File(dir, a.filename))
+                            repo.downloadOriginal(currentAsset.id, File(dir, currentAsset.filename))
                         }
                     }
                     val msg = result.fold(
@@ -200,7 +187,8 @@ fun ViewerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = TimeFormat.formatShortDate(a.takenAt) + if (a.camera != null) " \u00B7 ${a.camera}" else "",
+                text = TimeFormat.formatShortDate(currentAsset.takenAt) +
+                    if (currentAsset.camera != null) " \u00B7 ${currentAsset.camera}" else "",
                 color = Color.White,
                 style = MaterialTheme.typography.bodySmall,
             )
@@ -215,8 +203,8 @@ fun ViewerScreen(
     if (showTags) {
         TagDialog(
             tags = tags,
-            onAdd = viewModel::addTag,
-            onRemove = viewModel::removeTag,
+            onAdd = { viewModel.addTag(currentAsset, it) },
+            onRemove = { viewModel.removeTag(currentAsset, it) },
             onDismiss = { showTags = false },
         )
     }
@@ -225,7 +213,7 @@ fun ViewerScreen(
         AlbumPickerDialog(
             albums = albums,
             onPick = { id ->
-                viewModel.addToAlbum(id)
+                viewModel.addToAlbum(currentAsset, id)
                 showAlbums = false
             },
             onDismiss = { showAlbums = false },
@@ -233,7 +221,7 @@ fun ViewerScreen(
     }
 
     if (showInfo) {
-        InfoDialog(asset = a, onDismiss = { showInfo = false })
+        InfoDialog(asset = currentAsset, onDismiss = { showInfo = false })
     }
 }
 
@@ -282,7 +270,7 @@ private fun TagDialog(
 
 @Composable
 private fun AlbumPickerDialog(
-    albums: List<app.ocphotos.data.local.AlbumEntity>,
+    albums: List<AlbumEntity>,
     onPick: (Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -313,7 +301,7 @@ private fun AlbumPickerDialog(
 }
 
 @Composable
-private fun InfoDialog(asset: app.ocphotos.data.local.AssetEntity, onDismiss: () -> Unit) {
+private fun InfoDialog(asset: AssetEntity, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(asset.filename) },
@@ -349,12 +337,12 @@ private fun InfoRow(label: String, value: String) {
 
 // In-app video playback: ExoPlayer (Media3) fed with the signed stream URL.
 @Composable
-private fun VideoPlayer(viewModel: ViewerViewModel, assetId: Long) {
+private fun VideoPlayer(viewModel: ViewerViewModel, asset: AssetEntity) {
     val context = LocalContext.current
-    val player = remember { ExoPlayer.Builder(context).build() }
+    val player = remember(asset.id) { ExoPlayer.Builder(context).build() }
 
-    LaunchedEffect(assetId) {
-        val url = viewModel.videoUrl()
+    LaunchedEffect(asset.id) {
+        val url = viewModel.videoUrl(asset)
         if (url != null) {
             player.setMediaItem(MediaItem.fromUri(url))
             player.prepare()
@@ -362,7 +350,7 @@ private fun VideoPlayer(viewModel: ViewerViewModel, assetId: Long) {
         }
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(asset.id) {
         onDispose { player.release() }
     }
 

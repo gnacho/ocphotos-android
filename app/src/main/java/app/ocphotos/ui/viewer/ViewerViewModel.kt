@@ -9,84 +9,78 @@ import app.ocphotos.data.local.AssetEntity
 import app.ocphotos.data.repo.PhotosRepository
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class ViewerViewModel(
     private val repository: PhotosRepository,
-    private val assetId: Long,
+    val assetId: Long,
 ) : ViewModel() {
 
-    private val _asset = MutableStateFlow<AssetEntity?>(null)
-    val asset: StateFlow<AssetEntity?> = _asset.asStateFlow()
-
-    private val _tags = MutableStateFlow<List<String>>(emptyList())
-    val tags: StateFlow<List<String>> = _tags.asStateFlow()
+    // The swipe surface: every timeline asset, in the same order as the timeline.
+    // The initial page is derived from assetId in the screen.
+    val assets: StateFlow<List<AssetEntity>> = repository.timeline
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     private val _albums = MutableStateFlow<List<AlbumEntity>>(emptyList())
     val albums: StateFlow<List<AlbumEntity>> = _albums.asStateFlow()
+
+    private val _tags = MutableStateFlow<List<String>>(emptyList())
+    val tags: StateFlow<List<String>> = _tags.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
     init {
         viewModelScope.launch {
-            _asset.value = repository.assetById(assetId)
-            runCatching { _tags.value = repository.assetTags(assetId) }
             runCatching { _albums.value = repository.refreshAlbums() }
         }
     }
 
-    fun toggleFavorite() {
-        val a = _asset.value ?: return
+    fun loadTags(asset: AssetEntity) {
         viewModelScope.launch {
-            runCatching { repository.setFavorite(a.id, !a.favorite) }
-            _asset.value = a.copy(favorite = !a.favorite)
+            runCatching { _tags.value = repository.assetTags(asset.id) }
         }
     }
 
-    fun toggleArchived() {
-        val a = _asset.value ?: return
-        viewModelScope.launch {
-            runCatching { repository.setArchived(a.id, !a.archived) }
-            _asset.value = a.copy(archived = !a.archived)
-        }
+    fun toggleFavorite(asset: AssetEntity) {
+        viewModelScope.launch { runCatching { repository.setFavorite(asset.id, !asset.favorite) } }
     }
 
-    fun addTag(tag: String) {
-        val a = _asset.value ?: return
+    fun toggleArchived(asset: AssetEntity) {
+        viewModelScope.launch { runCatching { repository.setArchived(asset.id, !asset.archived) } }
+    }
+
+    fun addTag(asset: AssetEntity, tag: String) {
         val trimmed = tag.trim()
         if (trimmed.isEmpty()) return
         viewModelScope.launch {
-            runCatching { repository.addTag(a.id, trimmed) }
+            runCatching { repository.addTag(asset.id, trimmed) }
             if (trimmed !in _tags.value) _tags.value = _tags.value + trimmed
         }
     }
 
-    fun removeTag(tag: String) {
-        val a = _asset.value ?: return
+    fun removeTag(asset: AssetEntity, tag: String) {
         viewModelScope.launch {
-            runCatching { repository.removeTag(a.id, tag) }
+            runCatching { repository.removeTag(asset.id, tag) }
             _tags.value = _tags.value - tag
         }
     }
 
-    fun addToAlbum(albumId: Long) {
-        val a = _asset.value ?: return
-        viewModelScope.launch { runCatching { repository.addToAlbum(albumId, listOf(a.id)) } }
+    fun addToAlbum(asset: AssetEntity, albumId: Long) {
+        viewModelScope.launch { runCatching { repository.addToAlbum(albumId, listOf(asset.id)) } }
     }
 
-    suspend fun videoUrl(): String? {
-        val a = _asset.value ?: return null
-        return try {
-            repository.videoUrl(a.id)
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            _error.value = app.ocphotos.util.friendlyMessage(e)
-            null
-        }
+    suspend fun videoUrl(asset: AssetEntity): String? = try {
+        repository.videoUrl(asset.id)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        _error.value = app.ocphotos.util.friendlyMessage(e)
+        null
     }
 
     companion object {
