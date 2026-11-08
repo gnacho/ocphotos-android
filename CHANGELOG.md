@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 (2026-11-08)
+
+- Fix release-only login crash: R8 stripped the Retrofit suspend signatures, so
+  the app asked for a converter for `java.lang.Object` (method `stats`). Added
+  the Retrofit keep rules.
+
 ## 0.1.8 (2026-11-08)
 
 - Fix dark mode: text was light-on-white on screens without a background
