@@ -13,11 +13,17 @@
 -if interface * { @retrofit2.http.* <methods>; }
 -keep,allowobfuscation interface <1>
 
+# Retrofit 3 + R8 full mode: preserve the coroutine continuation and Call types
+# (and their generics) that carry the response type of suspend methods.
+-keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
+-keep,allowobfuscation,allowshrinking interface retrofit2.Call
+-keep,allowobfuscation,allowshrinking class retrofit2.Response
+
 # kotlinx.serialization: mantener serializers.
--keep,includedescriptorclasses class app.ocnotes.**$$serializer { *; }
--keepclassmembers class app.ocnotes.** {
+-keep,includedescriptorclasses class app.ocphotos.**$$serializer { *; }
+-keepclassmembers class app.ocphotos.** {
     *** Companion;
 }
--keepclasseswithmembers class app.ocnotes.** {
+-keepclasseswithmembers class app.ocphotos.** {
     kotlinx.serialization.KSerializer serializer(...);
 }
