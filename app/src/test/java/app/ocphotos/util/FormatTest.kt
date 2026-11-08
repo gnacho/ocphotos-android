@@ -22,6 +22,12 @@ class FormatTest {
     }
 
     @Test
+    fun yearUsesLocalDate() {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+        assertEquals(1970, TimeFormat.year(0))
+    }
+
+    @Test
     fun byteFormat() {
         assertEquals("500 B", ByteFormat.human(500))
         assertEquals("2.0 KB", ByteFormat.human(2048))
