@@ -23,6 +23,8 @@ import app.ocphotos.data.session.Session
 import app.ocphotos.data.session.SessionStore
 import app.ocphotos.sync.SyncEngine
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
@@ -85,7 +87,11 @@ class PhotosRepository(
     suspend fun assetById(id: Long): AssetEntity? = assetDao.byId(id)
 
     // ---- Sync ----
-    suspend fun sync(): Int = SyncEngine(requireApi(), assetDao, albumDao).fullSync()
+    private val syncMutex = Mutex()
+
+    suspend fun sync(): Int = syncMutex.withLock {
+        SyncEngine(requireApi(), assetDao, albumDao).fullSync()
+    }
 
     // ---- Stats ----
     suspend fun stats(): StatsResponse = requireApi().stats()

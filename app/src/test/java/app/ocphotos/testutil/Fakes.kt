@@ -127,6 +127,9 @@ class FakePhotosApi : PhotosApi {
     var failStats = false
     var failAssets = false
 
+    // Hook invoked at the start of assets() for instrumentation in tests.
+    var onAssets: suspend () -> Unit = {}
+
     var tagsResult = listOf<TagDto>()
     var assetTagsResult = listOf<String>()
     var albumsResult = listOf<AlbumDto>()
@@ -149,6 +152,7 @@ class FakePhotosApi : PhotosApi {
         archived: Int?,
         q: String?,
     ): AssetsResponse {
+        onAssets()
         if (failAssets) throw RuntimeException("boom")
         var result = all.toList()
         if (beforeTaken != null && beforeId != null) {
