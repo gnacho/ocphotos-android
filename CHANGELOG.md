@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2 (2026-11-09)
+
+- Fix the real cause of the release login error: the ProGuard rules kept
+  `app.ocnotes.**` (copied from another project) instead of `app.ocphotos.**`,
+  so R8 removed the DTO serializers. Now kept for `app.ocphotos.**`.
+
 ## 0.2.0 (2026-11-08)
 
 - Fix release-only login crash: R8 stripped the Retrofit suspend signatures, so
