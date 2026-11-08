@@ -34,8 +34,6 @@ import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -78,6 +76,7 @@ import app.ocphotos.ui.settings.SettingsScreen
 import app.ocphotos.ui.settings.SettingsViewModel
 import app.ocphotos.ui.tags.TagsScreen
 import app.ocphotos.ui.tags.TagsViewModel
+import app.ocphotos.ui.theme.OcphotosTheme
 import app.ocphotos.ui.timeline.TimelineScreen
 import app.ocphotos.ui.timeline.TimelineViewModel
 import app.ocphotos.ui.viewer.ViewerScreen
@@ -85,26 +84,35 @@ import app.ocphotos.ui.viewer.ViewerViewModel
 import kotlinx.coroutines.launch
 
 private data class Section(val route: String, val label: String, val icon: ImageVector)
+private data class SectionGroup(val header: String, val items: List<Section>)
 
-private val sections = listOf(
-    Section("timeline", "Photos", Icons.Filled.PhotoLibrary),
-    Section("memories", "Memories", Icons.Filled.CalendarMonth),
-    Section("explore", "Explore", Icons.Filled.Search),
-    Section("map", "Map", Icons.Filled.Map),
-    Section("favorites", "Favorites", Icons.Filled.Favorite),
-    Section("archive", "Archive", Icons.Filled.Archive),
-    Section("tags", "Tags", Icons.Filled.Sell),
-    Section("albums", "Albums", Icons.Filled.PhotoAlbum),
-    Section("folders", "Folders", Icons.Filled.Folder),
-    Section("duplicates", "Duplicates", Icons.Filled.ContentCopy),
-    Section("settings", "Settings", Icons.Filled.Settings),
+private val sectionGroups = listOf(
+    SectionGroup("Library", listOf(
+        Section("timeline", "Photos", Icons.Filled.PhotoLibrary),
+        Section("favorites", "Favorites", Icons.Filled.Favorite),
+        Section("archive", "Archive", Icons.Filled.Archive),
+    )),
+    SectionGroup("Organize", listOf(
+        Section("tags", "Tags", Icons.Filled.Sell),
+        Section("albums", "Albums", Icons.Filled.PhotoAlbum),
+        Section("folders", "Folders", Icons.Filled.Folder),
+        Section("duplicates", "Duplicates", Icons.Filled.ContentCopy),
+    )),
+    SectionGroup("Discover", listOf(
+        Section("memories", "Memories", Icons.Filled.CalendarMonth),
+        Section("explore", "Explore", Icons.Filled.Search),
+        Section("map", "Map", Icons.Filled.Map),
+    )),
 )
+
+private val sections = sectionGroups.flatMap { it.items }
 
 private fun titleFor(route: String?): String = when {
     route == null -> "ocphotos"
     route.startsWith("viewer") -> ""
     route.startsWith("tag/") -> "Tag"
     route.startsWith("album/") -> "Album"
+    route == "settings" -> "Settings"
     else -> sections.firstOrNull { it.route == route }?.label ?: "ocphotos"
 }
 
@@ -129,7 +137,7 @@ class MainActivity : ComponentActivity() {
                 ThemeMode.LIGHT -> false
                 ThemeMode.SYSTEM -> isSystemInDarkTheme()
             }
-            MaterialTheme(colorScheme = if (darkTheme) darkColorScheme() else lightColorScheme()) {
+            OcphotosTheme(darkTheme = darkTheme) {
                 CompositionLocalProvider(LocalRepository provides repository) {
                     val session by repository.session.collectAsStateWithLifecycle(initialValue = null)
                     if (session == null) {
@@ -170,23 +178,46 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.padding(16.dp),
                     )
                     HorizontalDivider()
-                    sections.forEach { section ->
-                        NavigationDrawerItem(
-                            label = { Text(section.label) },
-                            icon = { Icon(section.icon, contentDescription = null) },
-                            selected = currentRoute == section.route,
-                            onClick = {
-                                scope.launch {
-                                    navController.navigate(section.route) {
-                                        popUpTo("timeline") { inclusive = false }
-                                        launchSingleTop = true
-                                    }
-                                    drawerState.close()
-                                }
-                            },
-                            modifier = Modifier.padding(horizontal = 8.dp),
+                    sectionGroups.forEach { group ->
+                        Text(
+                            group.header,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(start = 28.dp, top = 12.dp, bottom = 4.dp),
                         )
+                        group.items.forEach { section ->
+                            NavigationDrawerItem(
+                                label = { Text(section.label) },
+                                icon = { Icon(section.icon, contentDescription = null) },
+                                selected = currentRoute == section.route,
+                                onClick = {
+                                    scope.launch {
+                                        navController.navigate(section.route) {
+                                            popUpTo("timeline") { inclusive = false }
+                                            launchSingleTop = true
+                                        }
+                                        drawerState.close()
+                                    }
+                                },
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                            )
+                        }
                     }
+                    NavigationDrawerItem(
+                        label = { Text("Settings") },
+                        icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
+                        selected = currentRoute == "settings",
+                        onClick = {
+                            scope.launch {
+                                navController.navigate("settings") {
+                                    popUpTo("timeline") { inclusive = false }
+                                    launchSingleTop = true
+                                }
+                                drawerState.close()
+                            }
+                        },
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                    )
                     HorizontalDivider()
                     NavigationDrawerItem(
                         label = { Text("Logout") },
@@ -235,6 +266,7 @@ class MainActivity : ComponentActivity() {
                             onOpen = { navController.navigate("viewer/$it") },
                             onToggleFavorite = vm::toggleFavorite,
                             onSync = vm::sync,
+                            onRescan = vm::rescan,
                         )
                     }
                     composable("memories") {

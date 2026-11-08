@@ -75,7 +75,7 @@ class MapViewModel(private val repository: PhotosRepository) : ViewModel() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = e.message ?: "Load failed"
+                _error.value = app.ocphotos.util.friendlyMessage(e)
             } finally {
                 _loading.value = false
             }
