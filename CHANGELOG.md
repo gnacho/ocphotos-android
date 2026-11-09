@@ -45,3 +45,9 @@
 - Room local cache and WorkManager periodic sync.
 - Basic app-password auth on every request (images included).
 - Light/dark theme and configurable sync interval.
+
+## [0.2.4] - 2026-11-09
+
+### Changed
+
+- New app icon background: the OpenCloud radial gradient (lilac centre to dark teal edge) replaces the flat blue, matching ocnews. The gradient radius is tuned so the dark rim stays inside the launcher mask.

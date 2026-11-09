@@ -31,8 +31,8 @@ android {
         applicationId = "app.ocphotos"
         minSdk = 29
         targetSdk = 37
-        versionCode = 6
-        versionName = "0.2.2"
+        versionCode = 7
+        versionName = "0.2.4"
     }
 
     buildTypes {
