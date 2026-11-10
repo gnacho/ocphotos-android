@@ -46,6 +46,12 @@
 - Basic app-password auth on every request (images included).
 - Light/dark theme and configurable sync interval.
 
+## [0.2.6] - 2026-11-10
+
+### Changed
+
+- New icon: flat #20434F background with the photo glyph in #E2BAFF, matching ocnews and ocnotes.
+
 ## [0.2.4] - 2026-11-09
 
 ### Changed
