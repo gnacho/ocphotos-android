@@ -30,6 +30,12 @@ class LoginViewModel(private val repository: PhotosRepository) : ViewModel() {
     fun onUsernameChange(v: String) = _state.update { it.copy(username = v) }
     fun onTokenChange(v: String) = _state.update { it.copy(token = v) }
 
+    // Called after signing out: the session is gone, so the form must not keep the
+    // previous credentials (or a stale loading flag) on screen.
+    fun reset() {
+        _state.value = LoginUiState()
+    }
+
     fun login() {
         val s = _state.value
         if (s.serverUrl.isBlank() || s.username.isBlank() || s.token.isBlank()) {
