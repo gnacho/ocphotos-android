@@ -1,5 +1,6 @@
 package app.ocphotos.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,9 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import app.ocphotos.R
 import app.ocphotos.data.local.AssetEntity
 import app.ocphotos.data.repo.PhotosRepository
+import app.ocphotos.util.UiError
 import coil3.compose.AsyncImage
 
 // CompositionLocal so composables can build authenticated image URLs via the repo.
@@ -84,7 +88,7 @@ fun PhotoGrid(
                 if (showVideoBadge && asset.mediaType == "video") {
                     Icon(
                         Icons.Filled.PlayArrow,
-                        contentDescription = "Video",
+                        contentDescription = stringResource(R.string.cd_video),
                         tint = Color.White,
                         modifier = Modifier.align(Alignment.BottomEnd),
                     )
@@ -92,7 +96,7 @@ fun PhotoGrid(
                 if (asset.favorite) {
                     Icon(
                         Icons.Filled.Favorite,
-                        contentDescription = "Favorite",
+                        contentDescription = stringResource(R.string.cd_favorite),
                         tint = MaterialTheme.colorScheme.error,
                         modifier = Modifier.align(Alignment.TopEnd),
                     )
@@ -105,24 +109,24 @@ fun PhotoGrid(
 @Composable
 fun StatusBox(
     loading: Boolean,
-    error: String?,
+    error: UiError?,
     empty: Boolean,
-    emptyLabel: String,
+    @StringRes emptyLabel: Int = 0,
     modifier: Modifier = Modifier,
-    actionLabel: String? = null,
+    @StringRes actionLabel: Int? = null,
     onAction: (() -> Unit)? = null,
 ) {
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
         when {
             loading -> CircularProgressIndicator()
             error != null -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = error, color = MaterialTheme.colorScheme.error)
+                Text(text = error.asText(), color = MaterialTheme.colorScheme.error)
             }
             empty -> Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(text = emptyLabel, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(text = stringResource(emptyLabel), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (actionLabel != null && onAction != null) {
                     Spacer(Modifier.height(8.dp))
-                    Button(onClick = onAction) { Text(actionLabel) }
+                    Button(onClick = onAction) { Text(stringResource(actionLabel)) }
                 }
             }
         }

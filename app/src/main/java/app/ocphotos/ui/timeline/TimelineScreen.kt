@@ -43,6 +43,9 @@ import app.ocphotos.ui.components.StatusBox
 import app.ocphotos.util.TimeFormat
 import app.ocphotos.util.groupByDay
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import app.ocphotos.R
+import app.ocphotos.util.UiError
 
 private data class MonthRef(val month: Int, val itemIndex: Int)
 private data class YearRef(val year: Int, val itemIndex: Int, val months: MutableList<MonthRef>)
@@ -51,7 +54,7 @@ private data class YearRef(val year: Int, val itemIndex: Int, val months: Mutabl
 fun TimelineScreen(
     assets: List<AssetEntity>,
     syncing: Boolean,
-    syncError: String?,
+    syncError: UiError?,
     onOpen: (Long) -> Unit,
     onToggleFavorite: (AssetEntity) -> Unit,
     onSync: () -> Unit,
@@ -60,11 +63,11 @@ fun TimelineScreen(
     val grouped = remember(assets) { groupByDay(assets) }
 
     if (assets.isEmpty() && syncing) {
-        StatusBox(loading = true, error = null, empty = false, emptyLabel = "")
+        StatusBox(loading = true, error = null, empty = false)
         return
     }
     if (assets.isEmpty() && syncError != null) {
-        StatusBox(loading = false, error = syncError, empty = false, emptyLabel = "")
+        StatusBox(loading = false, error = syncError, empty = false)
         return
     }
     if (assets.isEmpty()) {
@@ -72,8 +75,8 @@ fun TimelineScreen(
             loading = false,
             error = null,
             empty = true,
-            emptyLabel = "No photos yet",
-            actionLabel = "Rescan",
+            emptyLabel = R.string.empty_timeline,
+            actionLabel = R.string.action_rescan,
             onAction = onRescan,
         )
         return
@@ -136,7 +139,7 @@ fun TimelineScreen(
                         if (asset.favorite) {
                             Icon(
                                 Icons.Filled.Favorite,
-                                contentDescription = "Favorite",
+                                contentDescription = stringResource(R.string.cd_favorite),
                                 tint = MaterialTheme.colorScheme.error,
                                 modifier = Modifier.align(Alignment.TopEnd).padding(2.dp),
                             )
@@ -144,7 +147,7 @@ fun TimelineScreen(
                         if (asset.mediaType == "video") {
                             Icon(
                                 Icons.Filled.PlayArrow,
-                                contentDescription = "Video",
+                                contentDescription = stringResource(R.string.cd_video),
                                 tint = Color.White,
                                 modifier = Modifier.align(Alignment.BottomEnd).padding(2.dp),
                             )

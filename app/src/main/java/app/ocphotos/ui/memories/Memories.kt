@@ -39,6 +39,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import app.ocphotos.util.UiError
+import androidx.compose.ui.res.stringResource
+import app.ocphotos.R
 
 class MemoriesViewModel(private val repository: PhotosRepository) : ViewModel() {
 
@@ -54,8 +57,8 @@ class MemoriesViewModel(private val repository: PhotosRepository) : ViewModel() 
     private val _loading = MutableStateFlow(true)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    private val _error = MutableStateFlow<UiError?>(null)
+    val error: StateFlow<UiError?> = _error.asStateFlow()
 
     init {
         load()
@@ -71,7 +74,7 @@ class MemoriesViewModel(private val repository: PhotosRepository) : ViewModel() 
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = app.ocphotos.util.friendlyMessage(e)
+                _error.value = app.ocphotos.util.friendlyError(e)
             } finally {
                 _loading.value = false
             }
@@ -99,11 +102,11 @@ fun MemoriesScreen(
     val origin by repo.serverOrigin.collectAsState()
 
     if (loading && onThisDay.isEmpty()) {
-        StatusBox(loading = true, error = null, empty = false, emptyLabel = "")
+        StatusBox(loading = true, error = null, empty = false)
         return
     }
     if (onThisDay.isEmpty()) {
-        StatusBox(loading = false, error = error, empty = error == null, emptyLabel = "No memories today")
+        StatusBox(loading = false, error = error, empty = error == null, emptyLabel = R.string.empty_memories)
         return
     }
 
@@ -123,7 +126,7 @@ fun MemoriesScreen(
                         contentScale = ContentScale.Crop,
                     )
                     Text(
-                        text = "On this day \u00B7 ${hero?.scope ?: ""}",
+                        text = stringResource(R.string.memories_on_this_day_scope, hero?.scope ?: ""),
                         color = Color.White,
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier
@@ -136,7 +139,7 @@ fun MemoriesScreen(
 
         item(key = "header") {
             Text(
-                "On this day",
+                stringResource(R.string.memories_on_this_day),
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(12.dp),
             )

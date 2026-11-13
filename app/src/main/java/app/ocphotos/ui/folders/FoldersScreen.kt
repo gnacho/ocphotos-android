@@ -28,6 +28,9 @@ import app.ocphotos.data.local.AssetEntity
 import app.ocphotos.data.remote.dto.FolderDto
 import app.ocphotos.ui.components.AssetThumb
 import app.ocphotos.ui.components.StatusBox
+import androidx.compose.ui.res.stringResource
+import app.ocphotos.R
+import app.ocphotos.util.UiError
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -35,7 +38,7 @@ fun FoldersScreen(
     folders: List<FolderDto>,
     assets: List<AssetEntity>,
     loading: Boolean,
-    error: String?,
+    error: UiError?,
     canGoUp: Boolean,
     onOpenFolder: (String) -> Unit,
     onUp: () -> Unit,
@@ -45,14 +48,14 @@ fun FoldersScreen(
         if (canGoUp) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onUp) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Up")
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.cd_up))
                 }
-                Text("Parent", style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.folders_parent), style = MaterialTheme.typography.bodyMedium)
             }
         }
 
         if (loading && folders.isEmpty() && assets.isEmpty()) {
-            StatusBox(loading = true, error = null, empty = false, emptyLabel = "")
+            StatusBox(loading = true, error = null, empty = false)
             return@Column
         }
         if (folders.isEmpty() && assets.isEmpty()) {
@@ -60,7 +63,7 @@ fun FoldersScreen(
                 loading = false,
                 error = error,
                 empty = error == null,
-                emptyLabel = "Empty folder",
+                emptyLabel = R.string.empty_folder,
             )
             return@Column
         }

@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import app.ocphotos.util.UiError
 
 // Backs a list sourced from a Room Flow (favorites, archive).
 class FlowAssetsViewModel(source: Flow<List<AssetEntity>>) : ViewModel() {
@@ -28,8 +29,8 @@ class LoadAssetsViewModel(
     private val _loading = MutableStateFlow(true)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    private val _error = MutableStateFlow<UiError?>(null)
+    val error: StateFlow<UiError?> = _error.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -38,7 +39,7 @@ class LoadAssetsViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = app.ocphotos.util.friendlyMessage(e)
+                _error.value = app.ocphotos.util.friendlyError(e)
             } finally {
                 _loading.value = false
             }

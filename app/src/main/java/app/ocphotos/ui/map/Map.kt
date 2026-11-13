@@ -41,6 +41,10 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
+import app.ocphotos.util.UiError
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import app.ocphotos.R
 
 class MapViewModel(private val repository: PhotosRepository) : ViewModel() {
 
@@ -53,8 +57,8 @@ class MapViewModel(private val repository: PhotosRepository) : ViewModel() {
     private val _loading = MutableStateFlow(true)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    private val _error = MutableStateFlow<UiError?>(null)
+    val error: StateFlow<UiError?> = _error.asStateFlow()
 
     private val _selected = MutableStateFlow<PlaceDto?>(null)
     val selected: StateFlow<PlaceDto?> = _selected.asStateFlow()
@@ -75,7 +79,7 @@ class MapViewModel(private val repository: PhotosRepository) : ViewModel() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = app.ocphotos.util.friendlyMessage(e)
+                _error.value = app.ocphotos.util.friendlyError(e)
             } finally {
                 _loading.value = false
             }
@@ -114,6 +118,7 @@ fun MapScreen(
     val selected by viewModel.selected.collectAsState()
     val selectedAssets by viewModel.selectedAssets.collectAsState()
     val context = LocalContext.current
+    val resources = context.resources
 
     val mapView = remember {
         MapView(context).apply {
@@ -127,11 +132,11 @@ fun MapScreen(
     }
 
     if (loading && places.isEmpty()) {
-        StatusBox(loading = true, error = null, empty = false, emptyLabel = "")
+        StatusBox(loading = true, error = null, empty = false)
         return
     }
     if (places.isEmpty()) {
-        StatusBox(loading = false, error = error, empty = error == null, emptyLabel = "No geotagged photos")
+        StatusBox(loading = false, error = error, empty = error == null, emptyLabel = R.string.empty_geo)
         return
     }
 
@@ -145,7 +150,7 @@ fun MapScreen(
                     val marker = Marker(mv).apply {
                         position = GeoPoint(place.lat, place.lon)
                         title = place.name ?: "%.3f, %.3f".format(place.lat, place.lon)
-                        snippet = "${place.count} photos"
+                        snippet = resources.getQuantityString(R.plurals.place_photos, place.count, place.count)
                         setOnMarkerClickListener { _, _ ->
                             viewModel.select(place)
                             true
@@ -168,12 +173,12 @@ fun MapScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text(
-                            text = selected?.name ?: "Photos",
+                            text = selected?.name ?: stringResource(R.string.nav_photos),
                             style = MaterialTheme.typography.titleSmall,
                             modifier = Modifier.weight(1f),
                         )
                         Text(
-                            text = "Close",
+                            text = stringResource(R.string.action_close),
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.clickable { viewModel.clearSelection() }.padding(4.dp),
                         )

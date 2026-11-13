@@ -32,6 +32,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import app.ocphotos.util.UiError
+import androidx.compose.ui.res.pluralStringResource
+import app.ocphotos.R
 
 class DuplicatesViewModel(private val repository: PhotosRepository) : ViewModel() {
 
@@ -41,8 +44,8 @@ class DuplicatesViewModel(private val repository: PhotosRepository) : ViewModel(
     private val _loading = MutableStateFlow(true)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    private val _error = MutableStateFlow<UiError?>(null)
+    val error: StateFlow<UiError?> = _error.asStateFlow()
 
     init {
         load()
@@ -58,7 +61,7 @@ class DuplicatesViewModel(private val repository: PhotosRepository) : ViewModel(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = app.ocphotos.util.friendlyMessage(e)
+                _error.value = app.ocphotos.util.friendlyError(e)
             } finally {
                 _loading.value = false
             }
@@ -90,11 +93,11 @@ fun DuplicatesScreen(
     val error by viewModel.error.collectAsState()
 
     if (loading && groups.isEmpty()) {
-        StatusBox(loading = true, error = null, empty = false, emptyLabel = "")
+        StatusBox(loading = true, error = null, empty = false)
         return
     }
     if (groups.isEmpty()) {
-        StatusBox(loading = false, error = error, empty = error == null, emptyLabel = "No duplicates")
+        StatusBox(loading = false, error = error, empty = error == null, emptyLabel = R.string.empty_duplicates)
         return
     }
 
@@ -103,12 +106,25 @@ fun DuplicatesScreen(
             item(key = "group-$index") {
                 Column(Modifier.fillMaxWidth().padding(8.dp)) {
                     Text(
-                        "Group ${index + 1} (${group.size} photos)",
+                        pluralStringResource(
+                            R.plurals.duplicate_group,
+                            group.size,
+                            index + 1,
+                            group.size,
+                        ),
                         style = MaterialTheme.typography.titleSmall,
                     )
                     TextButton(
                         onClick = { group.drop(1).forEach { viewModel.archive(it) } },
-                    ) { Text("Archive ${group.size - 1} duplicates") }
+                    ) {
+                        Text(
+                            pluralStringResource(
+                                R.plurals.duplicates_archive,
+                                group.size - 1,
+                                group.size - 1,
+                            ),
+                        )
+                    }
                     FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(2.dp),
                         verticalArrangement = Arrangement.spacedBy(2.dp),

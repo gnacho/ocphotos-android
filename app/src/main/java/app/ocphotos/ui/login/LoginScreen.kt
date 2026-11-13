@@ -21,6 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import app.ocphotos.R
+import app.ocphotos.ui.components.asText
 
 @Composable
 fun LoginScreen(
@@ -38,9 +41,9 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text(text = "ocphotos", style = MaterialTheme.typography.headlineLarge)
+        Text(text = stringResource(R.string.app_name), style = MaterialTheme.typography.headlineLarge)
         Text(
-            text = "Sign in to your OpenCloud photos",
+            text = stringResource(R.string.login_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -49,8 +52,8 @@ fun LoginScreen(
         OutlinedTextField(
             value = state.serverUrl,
             onValueChange = onServerUrlChange,
-            label = { Text("Server URL") },
-            placeholder = { Text("https://drive.example.com") },
+            label = { Text(stringResource(R.string.login_server_url)) },
+            placeholder = { Text(stringResource(R.string.login_server_url_placeholder)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
@@ -59,7 +62,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = state.username,
             onValueChange = onUsernameChange,
-            label = { Text("Username") },
+            label = { Text(stringResource(R.string.login_username)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
         )
@@ -67,7 +70,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = state.token,
             onValueChange = onTokenChange,
-            label = { Text("App password") },
+            label = { Text(stringResource(R.string.login_app_password)) },
             modifier = Modifier.fillMaxWidth(),
             singleLine = true,
             visualTransformation = PasswordVisualTransformation(),
@@ -75,13 +78,13 @@ fun LoginScreen(
         Spacer(Modifier.height(16.dp))
 
         if (state.error != null) {
-            Text(text = state.error, color = MaterialTheme.colorScheme.error)
+            Text(text = state.error.asText(), color = MaterialTheme.colorScheme.error)
             Spacer(Modifier.height(8.dp))
         }
 
         Button(onClick = onLogin, enabled = !state.loading, modifier = Modifier.fillMaxWidth()) {
             if (state.loading) CircularProgressIndicator(Modifier.height(20.dp))
-            else Text("Sign in")
+            else Text(stringResource(R.string.login_sign_in))
         }
     }
 }

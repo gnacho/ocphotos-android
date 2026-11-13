@@ -5,6 +5,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.res.stringResource
+import app.ocphotos.R
 
 @Composable
 fun SignOutDialog(
@@ -13,20 +15,17 @@ fun SignOutDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Sign out?") },
+        title = { Text(stringResource(R.string.signout_title)) },
         text = {
-            Text(
-                "The session and the local copy of your library are removed from this " +
-                    "device. Your photos stay on the server.",
-            )
+            Text(stringResource(R.string.signout_body))
         },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Sign out", color = MaterialTheme.colorScheme.error)
+                Text(stringResource(R.string.nav_sign_out), color = MaterialTheme.colorScheme.error)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         },
     )
 }

@@ -12,13 +12,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import app.ocphotos.R
+import app.ocphotos.util.UiError
 
 data class LoginUiState(
     val serverUrl: String = "",
     val username: String = "",
     val token: String = "",
     val loading: Boolean = false,
-    val error: String? = null,
+    val error: UiError? = null,
 )
 
 class LoginViewModel(private val repository: PhotosRepository) : ViewModel() {
@@ -39,7 +41,7 @@ class LoginViewModel(private val repository: PhotosRepository) : ViewModel() {
     fun login() {
         val s = _state.value
         if (s.serverUrl.isBlank() || s.username.isBlank() || s.token.isBlank()) {
-            _state.update { it.copy(error = "Fill server, username and token") }
+            _state.update { it.copy(error = UiError(R.string.login_fill_all)) }
             return
         }
         viewModelScope.launch {
@@ -54,7 +56,7 @@ class LoginViewModel(private val repository: PhotosRepository) : ViewModel() {
                 throw e
             } catch (e: Exception) {
                 repository.bind(null)
-                _state.update { it.copy(loading = false, error = app.ocphotos.util.friendlyMessage(e)) }
+                _state.update { it.copy(loading = false, error = app.ocphotos.util.friendlyError(e)) }
             }
         }
     }

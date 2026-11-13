@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import app.ocphotos.data.settings.AppSettings
 import app.ocphotos.data.settings.ThemeMode
 import app.ocphotos.ui.components.SignOutDialog
+import androidx.compose.ui.res.stringResource
+import app.ocphotos.R
 
 @Composable
 fun SettingsScreen(
@@ -36,7 +38,7 @@ fun SettingsScreen(
     var confirmSignOut by remember { mutableStateOf(false) }
 
     Column(Modifier.padding(16.dp)) {
-        Text("Theme", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.settings_theme), style = MaterialTheme.typography.titleMedium)
         ThemeMode.entries.forEach { mode ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -52,7 +54,7 @@ fun SettingsScreen(
 
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
-        Text("Sync interval", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.settings_sync_interval), style = MaterialTheme.typography.titleMedium)
         listOf(5, 15, 30, 60).forEach { minutes ->
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -65,13 +67,13 @@ fun SettingsScreen(
                     selected = settings.syncIntervalMinutes == minutes,
                     onClick = { onInterval(minutes) },
                 )
-                Text("$minutes min")
+                Text(stringResource(R.string.settings_minutes, minutes))
             }
         }
 
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
-        Text("Account", style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(R.string.settings_account), style = MaterialTheme.typography.titleMedium)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
@@ -85,7 +87,7 @@ fun SettingsScreen(
                 tint = MaterialTheme.colorScheme.error,
             )
             Spacer(Modifier.width(16.dp))
-            Text("Sign out", color = MaterialTheme.colorScheme.error)
+            Text(stringResource(R.string.nav_sign_out), color = MaterialTheme.colorScheme.error)
         }
     }
 
@@ -100,8 +102,11 @@ fun SettingsScreen(
     }
 }
 
-private fun themeLabel(mode: ThemeMode): String = when (mode) {
-    ThemeMode.SYSTEM -> "System"
-    ThemeMode.LIGHT -> "Light"
-    ThemeMode.DARK -> "Dark"
-}
+@Composable
+private fun themeLabel(mode: ThemeMode): String = stringResource(
+    when (mode) {
+        ThemeMode.SYSTEM -> R.string.settings_theme_system
+        ThemeMode.LIGHT -> R.string.settings_theme_light
+        ThemeMode.DARK -> R.string.settings_theme_dark
+    },
+)

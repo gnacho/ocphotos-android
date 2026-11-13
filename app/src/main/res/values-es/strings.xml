@@ -1,0 +1,146 @@
+<resources>
+    <!-- Navegación -->
+    <string name="section_library">Biblioteca</string>
+    <string name="section_organize">Organizar</string>
+    <string name="section_discover">Descubrir</string>
+    <string name="nav_photos">Fotos</string>
+    <string name="nav_favorites">Favoritos</string>
+    <string name="nav_archive">Archivo</string>
+    <string name="nav_tags">Etiquetas</string>
+    <string name="nav_albums">Álbumes</string>
+    <string name="nav_folders">Carpetas</string>
+    <string name="nav_duplicates">Duplicados</string>
+    <string name="nav_memories">Recuerdos</string>
+    <string name="nav_explore">Explorar</string>
+    <string name="nav_map">Mapa</string>
+    <string name="nav_settings">Ajustes</string>
+    <string name="nav_sign_out">Cerrar sesión</string>
+    <string name="title_tag">Etiqueta</string>
+    <string name="title_album">Álbum</string>
+    <string name="cd_menu">Menú</string>
+
+    <!-- Acciones comunes -->
+    <string name="action_cancel">Cancelar</string>
+    <string name="action_close">Cerrar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_save">Guardar</string>
+    <string name="action_add">Añadir</string>
+    <string name="action_remove">Quitar</string>
+    <string name="action_rename">Renombrar</string>
+    <string name="action_rescan">Reescanear</string>
+    <string name="action_search">Buscar</string>
+
+    <!-- Login -->
+    <string name="login_subtitle">Entra en tus fotos de OpenCloud</string>
+    <string name="login_server_url">URL del servidor</string>
+    <string name="login_server_url_placeholder">https://drive.example.com</string>
+    <string name="login_username">Usuario</string>
+    <string name="login_app_password">Contraseña de aplicación</string>
+    <string name="login_sign_in">Entrar</string>
+    <string name="login_fill_all">Rellena servidor, usuario y contraseña</string>
+
+    <!-- Estados vacíos -->
+    <string name="empty_timeline">Aún no hay fotos</string>
+    <string name="empty_favorites">Sin favoritos</string>
+    <string name="empty_archive">Sin fotos archivadas</string>
+    <string name="empty_tag_photos">Sin fotos con esta etiqueta</string>
+    <string name="empty_album">Álbum vacío</string>
+    <string name="empty_albums">Sin álbumes</string>
+    <string name="empty_tags">Sin etiquetas</string>
+    <string name="empty_folder">Carpeta vacía</string>
+    <string name="empty_duplicates">Sin duplicados</string>
+    <string name="empty_memories">Sin recuerdos hoy</string>
+    <string name="empty_geo">Sin fotos con ubicación</string>
+
+    <!-- Explorar -->
+    <string name="explore_hint">Buscar fotos</string>
+    <string name="explore_prompt">Busca en tus fotos</string>
+    <string name="explore_no_results">Sin resultados</string>
+
+    <!-- Distintivos -->
+    <string name="cd_video">Vídeo</string>
+    <string name="cd_favorite">Favorito</string>
+
+    <!-- Álbumes -->
+    <string name="albums_new">Álbum</string>
+    <string name="albums_create_title">Nuevo álbum</string>
+    <string name="albums_rename_title">Renombrar álbum</string>
+    <string name="albums_delete_title">Eliminar álbum</string>
+    <string name="albums_delete_body">Se quitará \"%1$s\". Las fotos no se borran.</string>
+
+    <!-- Ajustes -->
+    <string name="settings_theme">Tema</string>
+    <string name="settings_theme_system">Sistema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
+    <string name="settings_sync_interval">Intervalo de sincronización</string>
+    <string name="settings_minutes">%1$d min</string>
+    <string name="settings_account">Cuenta</string>
+
+    <!-- Cerrar sesión -->
+    <string name="signout_title">¿Cerrar sesión?</string>
+    <string name="signout_body">Se quitan de este dispositivo la sesión y la copia local de tu biblioteca. Tus fotos siguen en el servidor.</string>
+
+    <!-- Visor -->
+    <string name="viewer_not_found">No se encontró la foto</string>
+    <string name="viewer_archive">Archivar</string>
+    <string name="viewer_tags">Etiquetas</string>
+    <string name="viewer_add_to_album">Añadir a un álbum</string>
+    <string name="viewer_download">Descargar</string>
+    <string name="viewer_info">Información</string>
+    <string name="viewer_saved_to">Guardado en %1$s</string>
+    <string name="viewer_download_failed">Error al descargar: %1$s</string>
+    <string name="viewer_new_tag">Nueva etiqueta</string>
+    <string name="info_date">Fecha</string>
+    <string name="info_camera">Cámara</string>
+    <string name="info_lens">Objetivo</string>
+    <string name="info_iso">ISO</string>
+    <string name="info_aperture">Apertura</string>
+    <string name="info_shutter">Obturación</string>
+    <string name="info_focal">Distancia focal</string>
+    <string name="info_dimensions">Dimensiones</string>
+    <string name="info_size">Tamaño</string>
+    <string name="info_location">Ubicación</string>
+    <string name="info_dimensions_value">%1$d x %2$d</string>
+
+    <!-- Carpetas -->
+    <string name="folders_parent">Carpeta superior</string>
+    <string name="cd_up">Subir</string>
+
+    <!-- Recuerdos -->
+    <string name="memories_on_this_day">Tal día como hoy</string>
+    <string name="memories_on_this_day_scope">Tal día como hoy · %1$s</string>
+
+    <!-- Errores -->
+    <string name="error_unknown_host">No se pudo resolver el servidor</string>
+    <string name="error_connect">No se pudo conectar con el servidor</string>
+    <string name="error_timeout">El servidor tardó demasiado en responder</string>
+    <string name="error_server">Error del servidor (HTTP %1$s)</string>
+    <string name="error_network">Error de red</string>
+    <string name="error_generic">Algo ha ido mal</string>
+
+    <!-- Tiempo relativo -->
+    <string name="relative_now">ahora</string>
+    <string name="relative_minutes">hace %1$d min</string>
+    <string name="relative_hours">hace %1$d h</string>
+    <string name="relative_days">hace %1$d d</string>
+    <string name="relative_weeks">hace %1$d sem</string>
+    <string name="relative_years">hace %1$d a</string>
+
+    <plurals name="album_items">
+        <item quantity="one">%1$d elemento</item>
+        <item quantity="other">%1$d elementos</item>
+    </plurals>
+    <plurals name="duplicate_group">
+        <item quantity="one">Grupo %1$d (%2$d foto)</item>
+        <item quantity="other">Grupo %1$d (%2$d fotos)</item>
+    </plurals>
+    <plurals name="duplicates_archive">
+        <item quantity="one">Archivar %1$d duplicado</item>
+        <item quantity="other">Archivar %1$d duplicados</item>
+    </plurals>
+    <plurals name="place_photos">
+        <item quantity="one">%1$d foto</item>
+        <item quantity="other">%1$d fotos</item>
+    </plurals>
+</resources>

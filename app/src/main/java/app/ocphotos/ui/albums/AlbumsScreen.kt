@@ -32,6 +32,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.ocphotos.data.local.AlbumEntity
 import app.ocphotos.ui.components.StatusBox
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
+import app.ocphotos.R
 
 @Composable
 fun AlbumsScreen(
@@ -50,13 +54,13 @@ fun AlbumsScreen(
             ExtendedFloatingActionButton(
                 onClick = { showCreate = true },
                 icon = { Icon(Icons.Filled.Add, contentDescription = null) },
-                text = { Text("Album") },
+                text = { Text(stringResource(R.string.albums_new)) },
             )
         },
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding)) {
             if (albums.isEmpty()) {
-                StatusBox(loading = false, error = null, empty = true, emptyLabel = "No albums")
+                StatusBox(loading = false, error = null, empty = true, emptyLabel = R.string.empty_albums)
             } else {
                 LazyColumn(Modifier.fillMaxSize()) {
                     items(albums, key = { it.id }) { album ->
@@ -69,13 +73,13 @@ fun AlbumsScreen(
                         ) {
                             Column(Modifier.weight(1f)) {
                                 Text(album.name, style = MaterialTheme.typography.titleMedium)
-                                Text("${album.count} items", style = MaterialTheme.typography.bodySmall)
+                                Text(pluralStringResource(R.plurals.album_items, album.count, album.count), style = MaterialTheme.typography.bodySmall)
                             }
                             IconButton(onClick = { renameTarget = album }) {
-                                Icon(Icons.Filled.Edit, contentDescription = "Rename")
+                                Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.action_rename))
                             }
                             IconButton(onClick = { deleteTarget = album }) {
-                                Icon(Icons.Filled.Delete, contentDescription = "Delete")
+                                Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.action_delete))
                             }
                         }
                         HorizontalDivider()
@@ -87,7 +91,7 @@ fun AlbumsScreen(
 
     if (showCreate) {
         NameDialog(
-            title = "New album",
+            title = R.string.albums_create_title,
             initial = "",
             onConfirm = { onCreate(it) },
             onDismiss = { showCreate = false },
@@ -95,7 +99,7 @@ fun AlbumsScreen(
     }
     renameTarget?.let { album ->
         NameDialog(
-            title = "Rename album",
+            title = R.string.albums_rename_title,
             initial = album.name,
             onConfirm = { onRename(album.id, it) },
             onDismiss = { renameTarget = null },
@@ -104,16 +108,16 @@ fun AlbumsScreen(
     deleteTarget?.let { album ->
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
-            title = { Text("Delete album") },
-            text = { Text("\"${album.name}\" will be removed. Photos are not deleted.") },
+            title = { Text(stringResource(R.string.albums_delete_title)) },
+            text = { Text(stringResource(R.string.albums_delete_body, album.name)) },
             confirmButton = {
                 TextButton(onClick = {
                     onDelete(album.id)
                     deleteTarget = null
-                }) { Text("Delete") }
+                }) { Text(stringResource(R.string.action_delete)) }
             },
             dismissButton = {
-                TextButton(onClick = { deleteTarget = null }) { Text("Cancel") }
+                TextButton(onClick = { deleteTarget = null }) { Text(stringResource(R.string.action_cancel)) }
             },
         )
     }
@@ -121,7 +125,7 @@ fun AlbumsScreen(
 
 @Composable
 private fun NameDialog(
-    title: String,
+    @StringRes title: Int,
     initial: String,
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
@@ -129,7 +133,7 @@ private fun NameDialog(
     var value by remember { mutableStateOf(initial) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { Text(stringResource(title)) },
         text = {
             OutlinedTextField(
                 value = value,
@@ -142,8 +146,8 @@ private fun NameDialog(
             TextButton(
                 onClick = { onConfirm(value); onDismiss() },
                 enabled = value.isNotBlank(),
-            ) { Text("Save") }
+            ) { Text(stringResource(R.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } },
     )
 }

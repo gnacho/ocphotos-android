@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import app.ocphotos.util.UiError
 
 class TimelineViewModel(private val repository: PhotosRepository) : ViewModel() {
 
@@ -22,8 +23,8 @@ class TimelineViewModel(private val repository: PhotosRepository) : ViewModel() 
     private val _syncing = MutableStateFlow(false)
     val syncing: StateFlow<Boolean> = _syncing.asStateFlow()
 
-    private val _syncError = MutableStateFlow<String?>(null)
-    val syncError: StateFlow<String?> = _syncError.asStateFlow()
+    private val _syncError = MutableStateFlow<UiError?>(null)
+    val syncError: StateFlow<UiError?> = _syncError.asStateFlow()
 
     init {
         sync()
@@ -38,7 +39,7 @@ class TimelineViewModel(private val repository: PhotosRepository) : ViewModel() 
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _syncError.value = app.ocphotos.util.friendlyMessage(e)
+                _syncError.value = app.ocphotos.util.friendlyError(e)
             } finally {
                 _syncing.value = false
             }

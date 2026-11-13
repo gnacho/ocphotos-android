@@ -71,6 +71,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import androidx.compose.ui.res.stringResource
+import app.ocphotos.R
+import app.ocphotos.ui.components.asText
 
 @Composable
 fun ViewerScreen(
@@ -87,10 +90,12 @@ fun ViewerScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var scale by remember { mutableStateOf(1f) }
     var offset by remember { mutableStateOf(Offset.Zero) }
+    var savedPath by remember { mutableStateOf<String?>(null) }
+    var downloadError by remember { mutableStateOf<app.ocphotos.util.UiError?>(null) }
 
     if (assets.isEmpty()) {
         Box(Modifier.fillMaxSize().background(Color.Black), contentAlignment = Alignment.Center) {
-            Text("Photo not found", color = Color.White)
+            Text(stringResource(R.string.viewer_not_found), color = Color.White)
         }
         return
     }
@@ -158,7 +163,7 @@ fun ViewerScreen(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             IconButton(onClick = onClose) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Close", tint = Color.White)
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.action_close), tint = Color.White)
             }
             Text(
                 text = currentAsset.filename,
@@ -180,18 +185,18 @@ fun ViewerScreen(
             IconButton(onClick = { viewModel.toggleFavorite(currentAsset) }) {
                 Icon(
                     if (currentAsset.favorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    contentDescription = "Favorite",
+                    contentDescription = stringResource(R.string.cd_favorite),
                     tint = if (currentAsset.favorite) Color(0xFFFF4081) else Color.White,
                 )
             }
             IconButton(onClick = { viewModel.toggleArchived(currentAsset) }) {
-                Icon(Icons.Filled.Archive, contentDescription = "Archive", tint = Color.White)
+                Icon(Icons.Filled.Archive, contentDescription = stringResource(R.string.viewer_archive), tint = Color.White)
             }
             IconButton(onClick = { showTags = true }) {
-                Icon(Icons.Filled.Sell, contentDescription = "Tags", tint = Color.White)
+                Icon(Icons.Filled.Sell, contentDescription = stringResource(R.string.viewer_tags), tint = Color.White)
             }
             IconButton(onClick = { showAlbums = true }) {
-                Icon(Icons.Filled.PhotoAlbum, contentDescription = "Add to album", tint = Color.White)
+                Icon(Icons.Filled.PhotoAlbum, contentDescription = stringResource(R.string.viewer_add_to_album), tint = Color.White)
             }
             IconButton(onClick = {
                 scope.launch {
@@ -202,17 +207,16 @@ fun ViewerScreen(
                             repo.downloadOriginal(currentAsset.id, File(dir, currentAsset.filename))
                         }
                     }
-                    val msg = result.fold(
-                        onSuccess = { "Saved to ${it.parent}" },
-                        onFailure = { "Download failed: ${app.ocphotos.util.friendlyMessage(it)}" },
+                    result.fold(
+                        onSuccess = { savedPath = it.parent.toString() },
+                        onFailure = { downloadError = app.ocphotos.util.friendlyError(it) },
                     )
-                    snackbarHostState.showSnackbar(msg)
                 }
             }) {
-                Icon(Icons.Filled.FileDownload, contentDescription = "Download", tint = Color.White)
+                Icon(Icons.Filled.FileDownload, contentDescription = stringResource(R.string.viewer_download), tint = Color.White)
             }
             IconButton(onClick = { showInfo = true }) {
-                Icon(Icons.Filled.Info, contentDescription = "Info", tint = Color.White)
+                Icon(Icons.Filled.Info, contentDescription = stringResource(R.string.viewer_info), tint = Color.White)
             }
         }
 
@@ -229,6 +233,21 @@ fun ViewerScreen(
                 color = Color.White,
                 style = MaterialTheme.typography.bodySmall,
             )
+        }
+
+        // Messages are resolved in composition (stringResource) so they follow the
+        // current configuration, then shown once.
+        val savedMessage = savedPath?.let { stringResource(R.string.viewer_saved_to, it) }
+        val errorMessage = downloadError?.let {
+            stringResource(R.string.viewer_download_failed, it.asText())
+        }
+        LaunchedEffect(savedMessage, errorMessage) {
+            val message = savedMessage ?: errorMessage
+            if (message != null) {
+                snackbarHostState.showSnackbar(message)
+                savedPath = null
+                downloadError = null
+            }
         }
 
         SnackbarHost(
@@ -272,22 +291,22 @@ private fun TagDialog(
     var newTag by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Tags") },
+        title = { Text(stringResource(R.string.viewer_tags)) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
                 tags.forEach { tag ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(tag, Modifier.weight(1f))
-                        TextButton(onClick = { onRemove(tag) }) { Text("Remove") }
+                        TextButton(onClick = { onRemove(tag) }) { Text(stringResource(R.string.action_remove)) }
                     }
                     HorizontalDivider()
                 }
-                if (tags.isEmpty()) Text("No tags")
+                if (tags.isEmpty()) Text(stringResource(R.string.empty_tags))
                 Spacer(Modifier.height(8.dp))
                 OutlinedTextField(
                     value = newTag,
                     onValueChange = { newTag = it },
-                    label = { Text("New tag") },
+                    label = { Text(stringResource(R.string.viewer_new_tag)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -297,10 +316,10 @@ private fun TagDialog(
             TextButton(onClick = {
                 onAdd(newTag)
                 newTag = ""
-            }) { Text("Add") }
+            }) { Text(stringResource(R.string.action_add)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Close") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) }
         },
     )
 }
@@ -313,10 +332,10 @@ private fun AlbumPickerDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add to album") },
+        title = { Text(stringResource(R.string.viewer_add_to_album)) },
         text = {
             if (albums.isEmpty()) {
-                Text("No albums")
+                Text(stringResource(R.string.empty_albums))
             } else {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     albums.forEach { album ->
@@ -333,7 +352,7 @@ private fun AlbumPickerDialog(
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
     )
 }
 
@@ -344,22 +363,22 @@ private fun InfoDialog(asset: AssetEntity, onDismiss: () -> Unit) {
         title = { Text(asset.filename) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState())) {
-                InfoRow("Date", TimeFormat.formatFullDate(asset.takenAt))
-                asset.camera?.let { InfoRow("Camera", it) }
-                asset.lens?.let { InfoRow("Lens", it) }
-                asset.iso?.let { InfoRow("ISO", it.toString()) }
-                asset.aperture?.let { InfoRow("Aperture", it) }
-                asset.shutter?.let { InfoRow("Shutter", it) }
-                asset.focal?.let { InfoRow("Focal", it) }
-                if (asset.width > 0) InfoRow("Dimensions", "${asset.width} x ${asset.height}")
-                InfoRow("Size", ByteFormat.human(asset.size))
+                InfoRow(stringResource(R.string.info_date), TimeFormat.formatFullDate(asset.takenAt))
+                asset.camera?.let { InfoRow(stringResource(R.string.info_camera), it) }
+                asset.lens?.let { InfoRow(stringResource(R.string.info_lens), it) }
+                asset.iso?.let { InfoRow(stringResource(R.string.info_iso), it.toString()) }
+                asset.aperture?.let { InfoRow(stringResource(R.string.info_aperture), it) }
+                asset.shutter?.let { InfoRow(stringResource(R.string.info_shutter), it) }
+                asset.focal?.let { InfoRow(stringResource(R.string.info_focal), it) }
+                if (asset.width > 0) InfoRow(stringResource(R.string.info_dimensions), stringResource(R.string.info_dimensions_value, asset.width, asset.height))
+                InfoRow(stringResource(R.string.info_size), ByteFormat.human(asset.size))
                 if (asset.lat != null && asset.lon != null) {
-                    InfoRow("Location", "%.5f, %.5f".format(asset.lat, asset.lon))
+                    InfoRow(stringResource(R.string.info_location), "%.5f, %.5f".format(asset.lat, asset.lon))
                 }
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) } },
     )
 }
 
