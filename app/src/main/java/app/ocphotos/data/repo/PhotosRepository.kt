@@ -23,6 +23,9 @@ import app.ocphotos.data.session.Session
 import app.ocphotos.data.session.SessionStore
 import app.ocphotos.sync.SyncEngine
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import okhttp3.OkHttpClient
@@ -42,7 +45,12 @@ class PhotosRepository(
     val session: Flow<Session?> = sessionStore.session
 
     @Volatile private var api: PhotosApi? = null
-    @Volatile private var serverOrigin: String? = null
+
+    // Observable on purpose: the timeline paints from Room before the persisted session
+    // is restored, and image URLs are built from this origin. Without a StateFlow the
+    // grid keeps empty URLs (and Coil never retries) until something else recomposes it.
+    private val _serverOrigin = MutableStateFlow<String?>(null)
+    val serverOrigin: StateFlow<String?> = _serverOrigin.asStateFlow()
 
     val isBound: Boolean get() = api != null
 
@@ -51,11 +59,11 @@ class PhotosRepository(
     fun bind(session: Session?) {
         if (session == null) {
             api = null
-            serverOrigin = null
+            _serverOrigin.value = null
             onCredentialsChange(null)
         } else {
             api = apiFactory(session)
-            serverOrigin = session.serverUrl.trimEnd('/')
+            _serverOrigin.value = session.serverUrl.trimEnd('/')
             onCredentialsChange(Credentials(session.username, session.token))
         }
     }
@@ -173,14 +181,14 @@ class PhotosRepository(
 
     // ---- Image/stream URLs (resolved to the absolute server origin) ----
     fun thumbUrl(id: Long, width: Int = 400): String =
-        serverOrigin?.let { "$it/ocphotos-api/api/assets/$id/thumb?w=$width" } ?: ""
+        _serverOrigin.value?.let { "$it/ocphotos-api/api/assets/$id/thumb?w=$width" } ?: ""
 
     fun originalUrl(id: Long): String =
-        serverOrigin?.let { "$it/ocphotos-api/api/assets/$id/original" } ?: ""
+        _serverOrigin.value?.let { "$it/ocphotos-api/api/assets/$id/original" } ?: ""
 
     suspend fun videoUrl(id: Long): String {
         val r = requireApi().videoUrl(id)
-        return serverOrigin?.let { "$it${r.url}" } ?: ""
+        return _serverOrigin.value?.let { "$it${r.url}" } ?: ""
     }
 
     // Downloads the original file (authenticated) to `dest`. Returns it or throws.

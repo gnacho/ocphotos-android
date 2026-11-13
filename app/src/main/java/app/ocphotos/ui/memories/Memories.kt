@@ -96,6 +96,7 @@ fun MemoriesScreen(
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
     val repo = LocalRepository.current
+    val origin by repo.serverOrigin.collectAsState()
 
     if (loading && onThisDay.isEmpty()) {
         StatusBox(loading = true, error = null, empty = false, emptyLabel = "")
@@ -116,7 +117,7 @@ fun MemoriesScreen(
                         .clickable { onOpen(first.id) },
                 ) {
                     AsyncImage(
-                        model = repo.thumbUrl(first.id, 2048),
+                        model = origin?.let { repo.thumbUrl(first.id, 2048) },
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop,
