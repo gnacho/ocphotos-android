@@ -54,6 +54,25 @@ class LoginViewModelTest {
     }
 
     @Test
+    fun `reset clears the form after a successful login`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val api = FakePhotosApi()
+        val sessionStore = FakeSessionStore()
+        val vm = LoginViewModel(buildRepository(api, sessionStore = sessionStore))
+
+        vm.onServerUrlChange("https://drive.example.com")
+        vm.onUsernameChange("nacho")
+        vm.onTokenChange("one two three four five six")
+        vm.login()
+        advanceUntilIdle()
+
+        vm.reset()
+
+        assertEquals(LoginUiState(), vm.state.value)
+        Dispatchers.resetMain()
+    }
+
+    @Test
     fun `empty fields do not call the api`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val api = FakePhotosApi()
