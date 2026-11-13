@@ -38,7 +38,10 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -58,6 +61,7 @@ import app.ocphotos.ui.albums.AlbumsScreen
 import app.ocphotos.ui.albums.AlbumsViewModel
 import app.ocphotos.ui.components.AssetGridScreen
 import app.ocphotos.ui.components.LocalRepository
+import app.ocphotos.ui.components.SignOutDialog
 import app.ocphotos.ui.duplicates.DuplicatesScreen
 import app.ocphotos.ui.duplicates.DuplicatesViewModel
 import app.ocphotos.ui.explore.ExploreScreen
@@ -166,6 +170,7 @@ class MainActivity : ComponentActivity() {
         val backStack by navController.currentBackStackEntryAsState()
         val currentRoute = backStack?.destination?.route
         val isViewer = currentRoute?.startsWith("viewer") == true
+        var confirmSignOut by remember { mutableStateOf(false) }
 
         ModalNavigationDrawer(
             drawerState = drawerState,
@@ -220,14 +225,12 @@ class MainActivity : ComponentActivity() {
                     )
                     HorizontalDivider()
                     NavigationDrawerItem(
-                        label = { Text("Logout") },
+                        label = { Text("Sign out") },
                         icon = { Icon(Icons.Filled.Logout, contentDescription = null) },
                         selected = false,
                         onClick = {
-                            scope.launch {
-                                repository.logout()
-                                drawerState.close()
-                            }
+                            confirmSignOut = true
+                            scope.launch { drawerState.close() }
                         },
                         modifier = Modifier.padding(horizontal = 8.dp),
                     )
@@ -393,6 +396,12 @@ class MainActivity : ComponentActivity() {
                             settings = settings,
                             onTheme = settingsViewModel::setTheme,
                             onInterval = settingsViewModel::setSyncInterval,
+                        onLogout = {
+                            scope.launch {
+                                repository.logout()
+                                loginViewModel.reset()
+                            }
+                        },
                         )
                     }
                     composable(
@@ -408,6 +417,19 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+
+        if (confirmSignOut) {
+            SignOutDialog(
+                onConfirm = {
+                    confirmSignOut = false
+                    scope.launch {
+                        repository.logout()
+                        loginViewModel.reset()
+                    }
+                },
+                onDismiss = { confirmSignOut = false },
+            )
         }
     }
 }
