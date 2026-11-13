@@ -1,6 +1,7 @@
 package app.ocphotos.ui.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +45,12 @@ fun AssetThumb(
     contentScale: ContentScale = ContentScale.Crop,
 ) {
     val repo = LocalRepository.current
+    // Recompose (and let Coil fetch) as soon as the session origin is known.
+    val origin by repo.serverOrigin.collectAsState()
+    if (origin == null) {
+        Box(modifier.background(MaterialTheme.colorScheme.surfaceVariant))
+        return
+    }
     AsyncImage(
         model = repo.thumbUrl(asset.id),
         contentDescription = asset.filename,

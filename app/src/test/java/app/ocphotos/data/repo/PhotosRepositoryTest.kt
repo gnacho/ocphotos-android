@@ -18,6 +18,25 @@ import org.junit.Test
 class PhotosRepositoryTest {
 
     @Test
+    fun `image urls follow the session origin`() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        val repo = buildRepository()
+
+        assertEquals("https://test.example.com", repo.serverOrigin.value)
+        assertEquals(
+            "https://test.example.com/ocphotos-api/api/assets/7/thumb?w=400",
+            repo.thumbUrl(7),
+        )
+
+        // Right after logout the timeline can still be painted from Room, and it must not
+        // build image URLs against the previous server.
+        repo.logout()
+        assertEquals(null, repo.serverOrigin.value)
+        assertEquals("", repo.thumbUrl(7))
+        Dispatchers.resetMain()
+    }
+
+    @Test
     fun `sync runs are serialized`() = runTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         val api = FakePhotosApi()

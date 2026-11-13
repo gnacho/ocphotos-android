@@ -81,6 +81,7 @@ fun ViewerScreen(
     val albums by viewModel.albums.collectAsState()
     val tags by viewModel.tags.collectAsState()
     val repo = LocalRepository.current
+    val origin by repo.serverOrigin.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -112,10 +113,10 @@ fun ViewerScreen(
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
             val asset = assets[page]
             if (asset.mediaType == "video") {
-                VideoPlayer(viewModel = viewModel, asset = asset)
+                VideoPlayer(viewModel = viewModel, asset = asset, origin = origin)
             } else {
                 AsyncImage(
-                    model = repo.originalUrl(asset.id),
+                    model = origin?.let { repo.originalUrl(asset.id) },
                     contentDescription = asset.filename,
                     modifier = Modifier
                         .fillMaxSize()
@@ -373,11 +374,11 @@ private fun InfoRow(label: String, value: String) {
 
 // In-app video playback: ExoPlayer (Media3) fed with the signed stream URL.
 @Composable
-private fun VideoPlayer(viewModel: ViewerViewModel, asset: AssetEntity) {
+private fun VideoPlayer(viewModel: ViewerViewModel, asset: AssetEntity, origin: String?) {
     val context = LocalContext.current
     val player = remember(asset.id) { ExoPlayer.Builder(context).build() }
 
-    LaunchedEffect(asset.id) {
+    LaunchedEffect(asset.id, origin) {
         val url = viewModel.videoUrl(asset)
         if (url != null) {
             player.setMediaItem(MediaItem.fromUri(url))
