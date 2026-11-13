@@ -7,12 +7,16 @@ import java.util.TimeZone
 class FormatTest {
 
     @Test
-    fun relativeTime() {
-        val now = System.currentTimeMillis() / 1000
-        assertEquals("now", TimeFormat.formatRelativeTime(now - 30))
-        assertEquals("5 min ago", TimeFormat.formatRelativeTime(now - 300))
-        assertEquals("2 h ago", TimeFormat.formatRelativeTime(now - 7200))
-        assertEquals("3 d ago", TimeFormat.formatRelativeTime(now - 3 * 86400))
+    fun monthShortNameFollowsTheLocale() {
+        val original = java.util.Locale.getDefault()
+        try {
+            java.util.Locale.setDefault(java.util.Locale.forLanguageTag("es-ES"))
+            assertEquals("ene", TimeFormat.monthShortName(1))
+            java.util.Locale.setDefault(java.util.Locale.forLanguageTag("en-US"))
+            assertEquals("Jan", TimeFormat.monthShortName(1))
+        } finally {
+            java.util.Locale.setDefault(original)
+        }
     }
 
     @Test

@@ -86,38 +86,42 @@ import app.ocphotos.ui.timeline.TimelineViewModel
 import app.ocphotos.ui.viewer.ViewerScreen
 import app.ocphotos.ui.viewer.ViewerViewModel
 import kotlinx.coroutines.launch
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import app.ocphotos.R
 
-private data class Section(val route: String, val label: String, val icon: ImageVector)
-private data class SectionGroup(val header: String, val items: List<Section>)
+private data class Section(val route: String, @StringRes val labelRes: Int, val icon: ImageVector)
+private data class SectionGroup(@StringRes val headerRes: Int, val items: List<Section>)
 
 private val sectionGroups = listOf(
-    SectionGroup("Library", listOf(
-        Section("timeline", "Photos", Icons.Filled.PhotoLibrary),
-        Section("favorites", "Favorites", Icons.Filled.Favorite),
-        Section("archive", "Archive", Icons.Filled.Archive),
+    SectionGroup(R.string.section_library, listOf(
+        Section("timeline", R.string.nav_photos, Icons.Filled.PhotoLibrary),
+        Section("favorites", R.string.nav_favorites, Icons.Filled.Favorite),
+        Section("archive", R.string.nav_archive, Icons.Filled.Archive),
     )),
-    SectionGroup("Organize", listOf(
-        Section("tags", "Tags", Icons.Filled.Sell),
-        Section("albums", "Albums", Icons.Filled.PhotoAlbum),
-        Section("folders", "Folders", Icons.Filled.Folder),
-        Section("duplicates", "Duplicates", Icons.Filled.ContentCopy),
+    SectionGroup(R.string.section_organize, listOf(
+        Section("tags", R.string.nav_tags, Icons.Filled.Sell),
+        Section("albums", R.string.nav_albums, Icons.Filled.PhotoAlbum),
+        Section("folders", R.string.nav_folders, Icons.Filled.Folder),
+        Section("duplicates", R.string.nav_duplicates, Icons.Filled.ContentCopy),
     )),
-    SectionGroup("Discover", listOf(
-        Section("memories", "Memories", Icons.Filled.CalendarMonth),
-        Section("explore", "Explore", Icons.Filled.Search),
-        Section("map", "Map", Icons.Filled.Map),
+    SectionGroup(R.string.section_discover, listOf(
+        Section("memories", R.string.nav_memories, Icons.Filled.CalendarMonth),
+        Section("explore", R.string.nav_explore, Icons.Filled.Search),
+        Section("map", R.string.nav_map, Icons.Filled.Map),
     )),
 )
 
 private val sections = sectionGroups.flatMap { it.items }
 
-private fun titleFor(route: String?): String = when {
-    route == null -> "ocphotos"
-    route.startsWith("viewer") -> ""
-    route.startsWith("tag/") -> "Tag"
-    route.startsWith("album/") -> "Album"
-    route == "settings" -> "Settings"
-    else -> sections.firstOrNull { it.route == route }?.label ?: "ocphotos"
+@StringRes
+private fun titleFor(route: String?): Int = when {
+    route == null -> R.string.app_name
+    route.startsWith("viewer") -> R.string.app_name
+    route.startsWith("tag/") -> R.string.title_tag
+    route.startsWith("album/") -> R.string.title_album
+    route == "settings" -> R.string.nav_settings
+    else -> sections.firstOrNull { it.route == route }?.labelRes ?: R.string.app_name
 }
 
 class MainActivity : ComponentActivity() {
@@ -178,21 +182,21 @@ class MainActivity : ComponentActivity() {
             drawerContent = {
                 ModalDrawerSheet {
                     Text(
-                        "ocphotos",
+                        stringResource(R.string.app_name),
                         style = MaterialTheme.typography.titleLarge,
                         modifier = Modifier.padding(16.dp),
                     )
                     HorizontalDivider()
                     sectionGroups.forEach { group ->
                         Text(
-                            group.header,
+                            stringResource(group.headerRes),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(start = 28.dp, top = 12.dp, bottom = 4.dp),
                         )
                         group.items.forEach { section ->
                             NavigationDrawerItem(
-                                label = { Text(section.label) },
+                                label = { Text(stringResource(section.labelRes)) },
                                 icon = { Icon(section.icon, contentDescription = null) },
                                 selected = currentRoute == section.route,
                                 onClick = {
@@ -209,7 +213,7 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                     NavigationDrawerItem(
-                        label = { Text("Settings") },
+                        label = { Text(stringResource(R.string.nav_settings)) },
                         icon = { Icon(Icons.Filled.Settings, contentDescription = null) },
                         selected = currentRoute == "settings",
                         onClick = {
@@ -225,7 +229,7 @@ class MainActivity : ComponentActivity() {
                     )
                     HorizontalDivider()
                     NavigationDrawerItem(
-                        label = { Text("Sign out") },
+                        label = { Text(stringResource(R.string.nav_sign_out)) },
                         icon = { Icon(Icons.Filled.Logout, contentDescription = null) },
                         selected = false,
                         onClick = {
@@ -241,10 +245,10 @@ class MainActivity : ComponentActivity() {
                 topBar = {
                     if (!isViewer) {
                         TopAppBar(
-                            title = { Text(titleFor(currentRoute)) },
+                            title = { Text(stringResource(titleFor(currentRoute))) },
                             navigationIcon = {
                                 IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                    Icon(Icons.Filled.Menu, contentDescription = "Menu")
+                                    Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.cd_menu))
                                 }
                             },
                         )
@@ -293,7 +297,7 @@ class MainActivity : ComponentActivity() {
                             assets = assets,
                             loading = false,
                             error = null,
-                            emptyLabel = "No favorites",
+                            emptyLabel = R.string.empty_favorites,
                             onOpen = { navController.navigate("viewer/$it") },
                         )
                     }
@@ -306,7 +310,7 @@ class MainActivity : ComponentActivity() {
                             assets = assets,
                             loading = false,
                             error = null,
-                            emptyLabel = "No archived photos",
+                            emptyLabel = R.string.empty_archive,
                             onOpen = { navController.navigate("viewer/$it") },
                         )
                     }
@@ -333,7 +337,7 @@ class MainActivity : ComponentActivity() {
                             assets = assets,
                             loading = loading,
                             error = error,
-                            emptyLabel = "No photos with this tag",
+                            emptyLabel = R.string.empty_tag_photos,
                             onOpen = { navController.navigate("viewer/$it") },
                         )
                     }
@@ -364,7 +368,7 @@ class MainActivity : ComponentActivity() {
                             assets = assets,
                             loading = loading,
                             error = error,
-                            emptyLabel = "Empty album",
+                            emptyLabel = R.string.empty_album,
                             onOpen = { navController.navigate("viewer/$it") },
                         )
                     }

@@ -13,6 +13,8 @@ import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
+import app.ocphotos.R
+import app.ocphotos.util.UiError
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoginViewModelTest {
@@ -48,7 +50,7 @@ class LoginViewModelTest {
         vm.login()
         advanceUntilIdle()
 
-        assertEquals("unauthorized", vm.state.value.error)
+        assertEquals(UiError(R.string.error_generic), vm.state.value.error)
         assertNull(sessionStore.saved)
         Dispatchers.resetMain()
     }
@@ -81,7 +83,7 @@ class LoginViewModelTest {
         vm.login()
         advanceUntilIdle()
 
-        assertEquals("Fill server, username and token", vm.state.value.error)
+        assertEquals(UiError(R.string.login_fill_all), vm.state.value.error)
         Dispatchers.resetMain()
     }
 }

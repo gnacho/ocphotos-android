@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import app.ocphotos.util.UiError
 
 class FoldersViewModel(private val repository: PhotosRepository) : ViewModel() {
 
@@ -29,8 +30,8 @@ class FoldersViewModel(private val repository: PhotosRepository) : ViewModel() {
     private val _loading = MutableStateFlow(true)
     val loading: StateFlow<Boolean> = _loading.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    private val _error = MutableStateFlow<UiError?>(null)
+    val error: StateFlow<UiError?> = _error.asStateFlow()
 
     init {
         load("")
@@ -48,7 +49,7 @@ class FoldersViewModel(private val repository: PhotosRepository) : ViewModel() {
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                _error.value = app.ocphotos.util.friendlyMessage(e)
+                _error.value = app.ocphotos.util.friendlyError(e)
             } finally {
                 _loading.value = false
             }

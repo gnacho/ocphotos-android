@@ -18,16 +18,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.ocphotos.data.remote.dto.TagDto
 import app.ocphotos.ui.components.StatusBox
+import app.ocphotos.R
+import app.ocphotos.util.UiError
 
 @Composable
 fun TagsScreen(
     tags: List<TagDto>,
     loading: Boolean,
-    error: String?,
+    error: UiError?,
     onOpen: (String) -> Unit,
 ) {
     if (loading && tags.isEmpty()) {
-        StatusBox(loading = true, error = null, empty = false, emptyLabel = "")
+        StatusBox(loading = true, error = null, empty = false)
         return
     }
     if (tags.isEmpty()) {
@@ -35,7 +37,7 @@ fun TagsScreen(
             loading = false,
             error = error,
             empty = error == null,
-            emptyLabel = "No tags",
+            emptyLabel = R.string.empty_tags,
         )
         return
     }

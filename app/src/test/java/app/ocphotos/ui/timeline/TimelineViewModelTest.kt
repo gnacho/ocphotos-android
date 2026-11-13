@@ -11,6 +11,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import app.ocphotos.R
+import app.ocphotos.util.UiError
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TimelineViewModelTest {
@@ -23,7 +25,7 @@ class TimelineViewModelTest {
 
         advanceUntilIdle()
 
-        assertEquals("boom", vm.syncError.value)
+        assertEquals(UiError(R.string.error_generic), vm.syncError.value)
         assertEquals(false, vm.syncing.value)
         Dispatchers.resetMain()
     }

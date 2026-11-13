@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import app.ocphotos.util.UiError
 
 class ViewerViewModel(
     private val repository: PhotosRepository,
@@ -31,8 +32,8 @@ class ViewerViewModel(
     private val _tags = MutableStateFlow<List<String>>(emptyList())
     val tags: StateFlow<List<String>> = _tags.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error.asStateFlow()
+    private val _error = MutableStateFlow<UiError?>(null)
+    val error: StateFlow<UiError?> = _error.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -79,7 +80,7 @@ class ViewerViewModel(
     } catch (e: CancellationException) {
         throw e
     } catch (e: Exception) {
-        _error.value = app.ocphotos.util.friendlyMessage(e)
+        _error.value = app.ocphotos.util.friendlyError(e)
         null
     }
 
